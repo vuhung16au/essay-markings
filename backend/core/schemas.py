@@ -13,8 +13,8 @@ class EssayRequest(BaseModel):
 class ScoreDetail(BaseModel):
     model_config = ConfigDict(extra="forbid")
 
-    score: int
-    max: int
+    score: int = Field(ge=0)
+    max: int = Field(gt=0)
 
 
 class FeedbackDetail(BaseModel):
@@ -42,5 +42,5 @@ class EssayResponse(BaseModel):
 
     scores: ScoreBundle
     feedback: FeedbackDetail
-    good_points: list[str]
-    improvements: list[str]
+    good_points: list[str] = Field(min_length=1, max_length=5)
+    improvements: list[str] = Field(min_length=1, max_length=5)
