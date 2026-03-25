@@ -103,7 +103,11 @@ curl -X POST http://localhost:8000/api/grade-essay \
 
 ### `POST /api/analyze-deterministic`
 
-Runs the deterministic scoring layer without calling the LLM. This is intended as a stable baseline for future hybrid grading.
+Runs the deterministic scoring layer without calling the LLM. It now uses:
+- prompt-aware content relevance
+- Pearson-style raw trait scoring before rubric mapping
+- token-level spelling detection
+- sentence-level grammar and discourse signals
 
 Example response body:
 
@@ -119,9 +123,9 @@ Example response body:
     "vocabulary": { "score": 1, "max": 2 }
   },
   "feedback": {
-    "form": "Length is within the target band for a full essay response.",
-    "grammar": "No repeated high-risk grammar patterns were detected.",
-    "spelling": "No obvious spelling-pattern issues were detected."
+    "form": "The response addresses the prompt directly and covers the task adequately. Length is within the official PTE target band of 200-300 words.",
+    "grammar": "Grammar shows strong control, with accurate sentences and some complexity.",
+    "spelling": "No spelling errors were detected at token level."
   },
   "signals": {
     "word_count": 291,
@@ -130,8 +134,25 @@ Example response body:
     "transition_hits": 4,
     "typo_hits": 0,
     "grammar_pattern_hits": 0,
-    "generic_phrase_hits": 8
+    "generic_phrase_hits": 0,
+    "prompt_keyword_overlap": 6,
+    "prompt_coverage_ratio": 0.75,
+    "all_caps_ratio": 0.02,
+    "bullet_line_count": 0,
+    "punctuation_count": 24,
+    "spelling_error_count": 0,
+    "grammar_error_count": 0,
+    "complex_sentence_count": 7,
+    "lexical_diversity": 0.54,
+    "academic_word_ratio": 0.21,
+    "raw_content": 3,
+    "raw_development_structure_coherence": 2,
+    "raw_form": 2,
+    "raw_grammar": 2,
+    "raw_linguistic_range": 2,
+    "raw_spelling": 2,
+    "raw_vocabulary": 2
   },
-  "summary": "Deterministic baseline completed using text-measurable features. This output is intended as a stable scoring anchor for a future hybrid grading strategy."
+  "summary": "Deterministic baseline completed using prompt relevance, token-level spelling, sentence-level grammar signals, and Pearson-style raw trait mapping."
 }
 ```

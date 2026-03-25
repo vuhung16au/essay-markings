@@ -61,6 +61,18 @@ class DeterministicSignals(BaseModel):
     all_caps_ratio: float = Field(ge=0)
     bullet_line_count: int = Field(ge=0)
     punctuation_count: int = Field(ge=0)
+    spelling_error_count: int = Field(ge=0)
+    grammar_error_count: int = Field(ge=0)
+    complex_sentence_count: int = Field(ge=0)
+    lexical_diversity: float = Field(ge=0)
+    academic_word_ratio: float = Field(ge=0)
+    raw_content: int = Field(ge=0, le=3)
+    raw_development_structure_coherence: int = Field(ge=0, le=2)
+    raw_form: int = Field(ge=0, le=2)
+    raw_grammar: int = Field(ge=0, le=2)
+    raw_linguistic_range: int = Field(ge=0, le=2)
+    raw_spelling: int = Field(ge=0, le=2)
+    raw_vocabulary: int = Field(ge=0, le=2)
 
 
 class DeterministicAnalysisResponse(BaseModel):
