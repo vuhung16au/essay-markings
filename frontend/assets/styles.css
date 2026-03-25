@@ -1,16 +1,8 @@
-:root {
-  --bg: #f6f2ea;
-  --paper: #fffdf8;
-  --ink: #1f2933;
-  --accent: #b85c38;
-  --accent-soft: #ead6cc;
-  --line: #d7c6ba;
-}
-
 .stApp {
   background:
-    radial-gradient(circle at top left, rgba(184, 92, 56, 0.12), transparent 30%),
-    linear-gradient(180deg, var(--bg), #efe8dd);
+    radial-gradient(circle at top left, var(--accent-soft), transparent 28%),
+    radial-gradient(circle at top right, rgba(255, 255, 255, 0.06), transparent 24%),
+    linear-gradient(180deg, var(--bg), var(--bg-accent));
   color: var(--ink);
 }
 
@@ -18,18 +10,38 @@
   background: transparent;
 }
 
+[data-testid="stHeader"] {
+  background: rgba(7, 10, 16, 0.72);
+  backdrop-filter: blur(12px);
+}
+
+[data-testid="block-container"] {
+  padding-top: 3rem;
+  padding-bottom: 4rem;
+}
+
 h1, h2, h3 {
   letter-spacing: 0.02em;
+  color: var(--ink);
+}
+
+p, label, .stCaption, .stMarkdown, .stText {
+  color: var(--ink);
+}
+
+[data-baseweb="select"] > div,
+div[data-testid="stTextArea"] > div,
+div[data-testid="stRadio"] > div {
+  background: var(--paper);
+  border: 1px solid var(--line);
+  border-radius: 18px;
+  box-shadow: var(--shadow);
 }
 
 div[data-testid="stTextArea"] textarea {
-  background: var(--paper);
-  border: 1px solid var(--line);
-}
-
-div[data-testid="stSelectbox"] > div,
-div[data-testid="stTextArea"] > div {
-  border-radius: 14px;
+  background: transparent;
+  color: var(--ink);
+  caret-color: var(--accent);
 }
 
 div[data-testid="stButton"] button {
@@ -37,10 +49,51 @@ div[data-testid="stButton"] button {
   border: none;
   color: white;
   font-weight: 600;
+  border-radius: 14px;
+  box-shadow: 0 18px 40px rgba(0, 0, 0, 0.22);
 }
 
 div[data-testid="stInfo"],
 div[data-testid="stWarning"],
 div[data-testid="stError"] {
-  border-radius: 14px;
+  border-radius: 18px;
+  border: 1px solid var(--line);
+  box-shadow: var(--shadow);
+}
+
+div[data-testid="stTable"] {
+  background: var(--paper);
+  border: 1px solid var(--line);
+  border-radius: 18px;
+  box-shadow: var(--shadow);
+  padding: 0.4rem;
+}
+
+div[data-testid="stRadio"] label {
+  color: var(--muted);
+}
+
+div[role="radiogroup"] label[data-baseweb="radio"] {
+  background: var(--paper-strong);
+  border: 1px solid var(--line);
+  border-radius: 999px;
+  padding: 0.35rem 0.8rem;
+}
+
+div[data-baseweb="select"] span,
+div[data-baseweb="select"] svg,
+div[data-testid="stRadio"] span,
+div[data-testid="stTextArea"] label,
+div[data-testid="stSelectbox"] label {
+  color: var(--ink);
+}
+
+div[data-baseweb="base-input"] > div {
+  background: transparent;
+}
+
+@media (max-width: 900px) {
+  [data-testid="block-container"] {
+    padding-top: 2rem;
+  }
 }

@@ -5,6 +5,7 @@ from __future__ import annotations
 import json
 from json import JSONDecodeError
 
+import httpx
 from openai import OpenAI
 
 from core.config import settings
@@ -20,7 +21,14 @@ def build_client(base_url: str, api_key: str = "lm-studio") -> OpenAI:
     return OpenAI(base_url=f"{base_url.rstrip('/')}/v1", api_key=api_key)
 
 
-client = build_client(settings.LLM_BASE_URL)
+def _get_client() -> OpenAI | None:
+    """Build the OpenAI client lazily so server startup doesn't fail on import."""
+
+    try:
+        return build_client(settings.LLM_BASE_URL)
+    except TypeError:
+        # Older OpenAI SDK versions can be incompatible with newer httpx releases.
+        return None
 
 
 def _extract_json_payload(raw_content: str) -> dict:
@@ -43,21 +51,53 @@ def _extract_json_payload(raw_content: str) -> dict:
 
 def _request_grading(question: str, essay: str) -> dict:
     prompt = build_pte_prompt(question, essay)
+    client = _get_client()
+
+    if client is not None:
+        try:
+            response = client.chat.completions.create(
+                model=settings.LLM_MODEL_NAME,
+                messages=[
+                    {"role": "system", "content": prompt["system"]},
+                    {"role": "user", "content": prompt["user"]},
+                ],
+                temperature=0.3,
+                response_format={"type": "json_object"},
+            )
+        except Exception as exc:
+            raise LLMServiceError(f"Failed to contact the local LLM server: {exc}") from exc
+
+        message = response.choices[0].message.content if response.choices else None
+        if not message:
+            raise LLMServiceError("LLM response was empty.")
+
+        return _extract_json_payload(message)
 
     try:
-        response = client.chat.completions.create(
-            model=settings.LLM_MODEL_NAME,
-            messages=[
-                {"role": "system", "content": prompt["system"]},
-                {"role": "user", "content": prompt["user"]},
-            ],
-            temperature=0.3,
-            response_format={"type": "json_object"},
+        response = httpx.post(
+            f"{settings.LLM_BASE_URL.rstrip('/')}/v1/chat/completions",
+            json={
+                "model": settings.LLM_MODEL_NAME,
+                "messages": [
+                    {"role": "system", "content": prompt["system"]},
+                    {"role": "user", "content": prompt["user"]},
+                ],
+                "temperature": 0.3,
+                "response_format": {"type": "json_object"},
+            },
+            headers={"Content-Type": "application/json", "Authorization": "Bearer lm-studio"},
+            timeout=90.0,
         )
+        response.raise_for_status()
     except Exception as exc:
         raise LLMServiceError(f"Failed to contact the local LLM server: {exc}") from exc
 
-    message = response.choices[0].message.content if response.choices else None
+    try:
+        payload = response.json()
+        message = payload["choices"][0]["message"]["content"]
+    except Exception as exc:
+        raise LLMServiceError("LLM response format was not recognized.") from exc
+
     if not message:
         raise LLMServiceError("LLM response was empty.")
 

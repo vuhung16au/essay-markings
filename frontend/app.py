@@ -4,6 +4,7 @@ from __future__ import annotations
 
 import json
 import os
+from textwrap import dedent
 from pathlib import Path
 from urllib import error, request
 
@@ -23,10 +24,50 @@ CRITERIA_LABELS = {
 }
 
 
-def load_styles() -> None:
+def load_styles(theme_mode: str) -> None:
     css_path = Path(__file__).parent / "assets" / "styles.css"
     if css_path.exists():
-        st.markdown(f"<style>{css_path.read_text()}</style>", unsafe_allow_html=True)
+        theme_variables = dedent(
+            """
+            <style>
+            :root {
+              --bg: #0d1117;
+              --bg-accent: #1a2230;
+              --paper: rgba(16, 22, 31, 0.88);
+              --paper-strong: #131a24;
+              --ink: #f3efe7;
+              --muted: #b8c0cc;
+              --accent: #ff8a4c;
+              --accent-soft: rgba(255, 138, 76, 0.18);
+              --line: rgba(255, 255, 255, 0.12);
+              --shadow: 0 24px 70px rgba(0, 0, 0, 0.35);
+            }
+            </style>
+            """
+        ).strip()
+
+        if theme_mode == "Light":
+            theme_variables = dedent(
+                """
+                <style>
+                :root {
+                  --bg: #f4ede1;
+                  --bg-accent: #fff8ef;
+                  --paper: rgba(255, 252, 246, 0.9);
+                  --paper-strong: #fffaf2;
+                  --ink: #1f2933;
+                  --muted: #5d6a75;
+                  --accent: #b85c38;
+                  --accent-soft: rgba(184, 92, 56, 0.16);
+                  --line: rgba(103, 80, 64, 0.18);
+                  --shadow: 0 24px 70px rgba(118, 82, 45, 0.14);
+                }
+                </style>
+                """
+            ).strip()
+
+        stylesheet = f"{theme_variables}\n<style>\n{css_path.read_text().strip()}\n</style>"
+        st.markdown(stylesheet, unsafe_allow_html=True)
 
 
 def load_local_env() -> dict[str, str]:
@@ -127,17 +168,30 @@ def render_points(title: str, points: list[str]) -> None:
 
 
 st.set_page_config(page_title="PTE Essay Marker", layout="wide")
-load_styles()
-
 if "question" not in st.session_state:
     st.session_state.question = ""
 if "essay" not in st.session_state:
     st.session_state.essay = ""
 if "result" not in st.session_state:
     st.session_state.result = None
+if "theme_mode" not in st.session_state:
+    st.session_state.theme_mode = "Dark"
 
-st.title("PTE Essay Marker")
-st.caption("Submit a PTE essay question and response to receive structured grading feedback from the backend.")
+load_styles(st.session_state.theme_mode)
+
+hero_col, toggle_col = st.columns([5, 1.5])
+with hero_col:
+    st.title("PTE Essay Marker")
+    st.caption("Submit a PTE essay question and response to receive structured grading feedback from the backend.")
+with toggle_col:
+    st.markdown("**Theme**")
+    st.radio(
+        "Theme",
+        ["Dark", "Light"],
+        horizontal=True,
+        key="theme_mode",
+        label_visibility="collapsed",
+    )
 
 sample_options = build_sample_options()
 selected_sample = st.selectbox(
