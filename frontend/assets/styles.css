@@ -4,6 +4,7 @@
   --ink: #1f2933;
   --accent: #b85c38;
   --accent-soft: #ead6cc;
+  --line: #d7c6ba;
 }
 
 .stApp {
@@ -23,4 +24,23 @@ h1, h2, h3 {
 
 div[data-testid="stTextArea"] textarea {
   background: var(--paper);
+  border: 1px solid var(--line);
+}
+
+div[data-testid="stSelectbox"] > div,
+div[data-testid="stTextArea"] > div {
+  border-radius: 14px;
+}
+
+div[data-testid="stButton"] button {
+  background: linear-gradient(135deg, var(--accent), #d97745);
+  border: none;
+  color: white;
+  font-weight: 600;
+}
+
+div[data-testid="stInfo"],
+div[data-testid="stWarning"],
+div[data-testid="stError"] {
+  border-radius: 14px;
 }
