@@ -44,3 +44,24 @@ class EssayResponse(BaseModel):
     feedback: FeedbackDetail
     good_points: list[str] = Field(min_length=1, max_length=5)
     improvements: list[str] = Field(min_length=1, max_length=5)
+
+
+class DeterministicSignals(BaseModel):
+    model_config = ConfigDict(extra="forbid")
+
+    word_count: int = Field(ge=0)
+    paragraph_count: int = Field(ge=0)
+    sentence_count: int = Field(ge=0)
+    transition_hits: int = Field(ge=0)
+    typo_hits: int = Field(ge=0)
+    grammar_pattern_hits: int = Field(ge=0)
+    generic_phrase_hits: int = Field(ge=0)
+
+
+class DeterministicAnalysisResponse(BaseModel):
+    model_config = ConfigDict(extra="forbid")
+
+    scores: ScoreBundle
+    feedback: FeedbackDetail
+    signals: DeterministicSignals
+    summary: str
