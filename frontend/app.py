@@ -4,6 +4,9 @@ from __future__ import annotations
 
 import json
 import os
+import shutil
+import subprocess
+import tempfile
 from io import BytesIO
 from textwrap import dedent
 from pathlib import Path
@@ -91,10 +94,14 @@ def cached_sample_data() -> tuple[list[dict], list[dict]]:
     return load_sample_data()
 
 
-def get_backend_url() -> str:
+def get_runtime_setting(key: str, default: str = "") -> str:
     env_values = load_local_env()
-    host = os.getenv("BACKEND_HOST") or env_values.get("BACKEND_HOST", "0.0.0.0")
-    port = os.getenv("BACKEND_PORT") or env_values.get("BACKEND_PORT", "8000")
+    return os.getenv(key) or env_values.get(key, default)
+
+
+def get_backend_url() -> str:
+    host = get_runtime_setting("BACKEND_HOST", "0.0.0.0")
+    port = get_runtime_setting("BACKEND_PORT", "8000")
     if host == "0.0.0.0":
         host = "localhost"
     return f"http://{host}:{port}"
@@ -338,6 +345,97 @@ def build_docx_report(question: str, essay: str, result: dict) -> bytes:
     return buffer.getvalue()
 
 
+def _resolve_tool(command: str) -> str | None:
+    direct = shutil.which(command)
+    if direct:
+        return direct
+
+    common_paths = (
+        Path("/opt/homebrew/bin") / command,
+        Path("/usr/local/bin") / command,
+    )
+    for candidate in common_paths:
+        if candidate.exists():
+            return str(candidate)
+    return None
+
+
+def _pandoc_path() -> str | None:
+    configured = get_runtime_setting("PANDOC_PATH", "").strip()
+    if configured:
+        candidate = Path(configured).expanduser()
+        if candidate.exists():
+            return str(candidate)
+    return _resolve_tool("pandoc")
+
+
+def _preferred_pdf_engine() -> str | None:
+    configured = get_runtime_setting("PDF_ENGINE_PATH", "").strip()
+    if configured:
+        candidate = Path(configured).expanduser()
+        if candidate.exists():
+            return str(candidate)
+    for engine in ("wkhtmltopdf", "weasyprint", "xelatex", "lualatex", "pdflatex", "tectonic"):
+        resolved = _resolve_tool(engine)
+        if resolved:
+            return resolved
+    return None
+
+
+def _build_pandoc_pdf_report(markdown_report: str) -> tuple[bytes, str]:
+    pandoc = _pandoc_path()
+    if not pandoc:
+        raise RuntimeError("Pandoc is not installed.")
+
+    engine = _preferred_pdf_engine()
+    css_path = Path(__file__).parent / "assets" / "report-export.css"
+
+    with tempfile.TemporaryDirectory(prefix="pte-pdf-export-") as tmp_dir:
+        tmp_path = Path(tmp_dir)
+        markdown_path = tmp_path / "essay-report.md"
+        pdf_path = tmp_path / "essay-report.pdf"
+        markdown_path.write_text(markdown_report, encoding="utf-8")
+
+        command = [
+            pandoc,
+            str(markdown_path),
+            "--from=markdown",
+            "--to=pdf",
+            "--standalone",
+            "--metadata=title:Essay Report",
+            "--output",
+            str(pdf_path),
+        ]
+
+        if engine:
+            engine_name = Path(engine).name
+            command.extend(["--pdf-engine", engine])
+            if engine_name in {"wkhtmltopdf", "weasyprint"} and css_path.exists():
+                command.extend(["--css", str(css_path)])
+            else:
+                command.extend(
+                    [
+                        "--variable",
+                        "geometry:margin=0.9in",
+                        "--variable",
+                        "fontsize:11pt",
+                    ]
+                )
+
+        completed = subprocess.run(
+            command,
+            capture_output=True,
+            text=True,
+            check=False,
+        )
+        if completed.returncode != 0 or not pdf_path.exists():
+            stderr = completed.stderr.strip() or "unknown pandoc conversion error"
+            raise RuntimeError(f"Pandoc PDF export failed: {stderr}")
+
+        engine_label = Path(engine).name if engine else "pandoc default PDF engine"
+        return pdf_path.read_bytes(), f"Pandoc PDF export ({engine_label})."
+
+
 def _wrap_text(text: str, width: int = 95) -> list[str]:
     paragraphs = text.splitlines() or [text]
     wrapped: list[str] = []
@@ -350,7 +448,7 @@ def _wrap_text(text: str, width: int = 95) -> list[str]:
     return wrapped
 
 
-def build_pdf_report(question: str, essay: str, result: dict) -> bytes:
+def _build_reportlab_pdf_report(question: str, essay: str, result: dict) -> bytes:
     from reportlab.lib.pagesizes import A4
     from reportlab.pdfbase.pdfmetrics import stringWidth
     from reportlab.pdfgen import canvas
@@ -439,6 +537,14 @@ def build_pdf_report(question: str, essay: str, result: dict) -> bytes:
     return buffer.getvalue()
 
 
+def build_pdf_report(question: str, essay: str, result: dict) -> tuple[bytes, str]:
+    markdown_report = build_markdown_report(question, essay, result)
+    try:
+        return _build_pandoc_pdf_report(markdown_report)
+    except RuntimeError:
+        return _build_reportlab_pdf_report(question, essay, result), "Fallback PDF export (ReportLab)."
+
+
 def render_export_buttons(question: str, essay: str, result: dict) -> None:
     st.markdown("**Export Essay Report**")
     markdown_report = build_markdown_report(question, essay, result)
@@ -469,7 +575,7 @@ def render_export_buttons(question: str, essay: str, result: dict) -> None:
 
     with pdf_col:
         try:
-            pdf_report = build_pdf_report(question, essay, result)
+            pdf_report, pdf_note = build_pdf_report(question, essay, result)
             st.download_button(
                 "Export as PDF",
                 data=pdf_report,
@@ -477,6 +583,7 @@ def render_export_buttons(question: str, essay: str, result: dict) -> None:
                 mime="application/pdf",
                 use_container_width=True,
             )
+            st.caption(pdf_note)
         except ImportError:
             st.button("Export as PDF", disabled=True, use_container_width=True)
             st.caption("Install `reportlab` to enable PDF export.")

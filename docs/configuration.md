@@ -26,6 +26,8 @@ LLM_MODEL_NAME=meta-llama-3.1-8b-instruct
 BACKEND_HOST=0.0.0.0
 BACKEND_PORT=8000
 FRONTEND_PORT=8501
+PANDOC_PATH=/opt/homebrew/bin/pandoc
+PDF_ENGINE_PATH=
 ```
 
 ## LLM requirements
@@ -64,6 +66,15 @@ This is the main source of typed application settings.
 ## Frontend configuration behavior
 
 The frontend reads runtime settings so it can call the backend on the expected host and port.
+
+It also reads optional export-tool settings:
+
+- `PANDOC_PATH`
+  - explicit path to the `pandoc` binary
+- `PDF_ENGINE_PATH`
+  - explicit path to a preferred PDF engine such as `wkhtmltopdf` or `weasyprint`
+
+If these are unset, the frontend falls back to auto-detection from common system paths.
 
 Main frontend entry:
 

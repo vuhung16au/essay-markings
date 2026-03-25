@@ -72,16 +72,45 @@ PDF exports should:
 - preserve the main section order and scores
 - remain readable on screen and when printed
 
+The preferred PDF path is now:
+
+- Markdown report -> `pandoc` -> PDF
+
+This is intended to preserve layout quality more closely to the Word export.
+
+If `pandoc` is unavailable, the frontend falls back to the built-in ReportLab PDF generator.
+
+## PDF rendering behavior
+
+The app now uses these PDF strategies in order:
+
+1. `pandoc` with an available PDF engine
+2. built-in ReportLab fallback
+
+When `pandoc` uses an HTML-capable engine such as `wkhtmltopdf` or `weasyprint`, the app applies the stylesheet in [frontend/assets/report-export.css](../frontend/assets/report-export.css) for improved heading, spacing, and table formatting.
+
 ## Limitations
 
 - Export content depends on the current result payload.
 - Very long feedback may wrap differently between Word and PDF.
-- Styling is simpler than the live frontend UI.
+- PDF quality depends on local tools available on the machine.
 - Export generation requires the relevant Python dependencies to be installed.
 
 ## Dependency notes
 
 Word and PDF exports depend on installed packages from the project environment.
+
+For the best PDF output, install:
+
+- `pandoc`
+- a usable PDF engine such as `wkhtmltopdf`, `weasyprint`, `xelatex`, `lualatex`, `pdflatex`, or `tectonic`
+
+You can also configure explicit tool paths in [.env.local](../.env.local):
+
+```env
+PANDOC_PATH=/opt/homebrew/bin/pandoc
+PDF_ENGINE_PATH=/opt/homebrew/bin/wkhtmltopdf
+```
 
 If export features fail or disappear, rerun:
 
