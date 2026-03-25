@@ -4,6 +4,7 @@ from __future__ import annotations
 
 import json
 import os
+from io import BytesIO
 from textwrap import dedent
 from pathlib import Path
 from urllib import error, request
@@ -198,6 +199,289 @@ def render_details(details: dict, scores: dict) -> None:
                 st.caption("No deductions were applied in this category.")
 
 
+def total_score(scores: dict) -> tuple[int, int]:
+    earned = sum(item["score"] for item in scores.values())
+    maximum = sum(item["max"] for item in scores.values())
+    return earned, maximum
+
+
+def build_markdown_report(question: str, essay: str, result: dict) -> str:
+    earned, maximum = total_score(result["scores"])
+    lines = [
+        "# Essay Report",
+        "",
+        "## Essay question",
+        question.strip(),
+        "",
+        "## Submitted essay",
+        essay.strip(),
+        "",
+        "## Overall score",
+        f"{earned} / {maximum}",
+        "",
+        "## Detailed breakdown of scores",
+        "",
+        "| Category | Score |",
+        "| --- | --- |",
+    ]
+
+    for key, label in CRITERIA_LABELS.items():
+        score = result["scores"][key]
+        lines.append(f"| {label} | {score['score']} / {score['max']} |")
+
+    lines.extend(
+        [
+            "",
+            "## Comments and feedback for each category",
+            "",
+        ]
+    )
+
+    details = result.get("details") or {}
+    for key, label in CRITERIA_LABELS.items():
+        score = result["scores"][key]
+        lines.extend(
+            [
+                f"### {label} ({score['score']} / {score['max']})",
+                (details.get(key) or {}).get("analysis", "No detailed analysis available."),
+            ]
+        )
+
+        deductions = (details.get(key) or {}).get("deductions") or []
+        if deductions:
+            lines.append("")
+            lines.append("Reasons for deducted marks:")
+            for deduction in deductions:
+                lines.append(f"- {deduction}")
+
+        if key in result["feedback"]:
+            lines.append("")
+            lines.append(f"Feedback note: {result['feedback'][key]}")
+
+        lines.append("")
+
+    lines.extend(
+        [
+            "## Suggestions for improvement",
+            "",
+        ]
+    )
+    for item in result.get("improvements", []):
+        lines.append(f"- {item}")
+
+    good_points = result.get("good_points") or []
+    if good_points:
+        lines.extend(
+            [
+                "",
+                "## Strengths",
+                "",
+            ]
+        )
+        for item in good_points:
+            lines.append(f"- {item}")
+
+    return "\n".join(lines).strip() + "\n"
+
+
+def build_docx_report(question: str, essay: str, result: dict) -> bytes:
+    from docx import Document
+
+    earned, maximum = total_score(result["scores"])
+    document = Document()
+    document.add_heading("Essay Report", level=0)
+
+    document.add_heading("Essay question", level=1)
+    document.add_paragraph(question.strip())
+
+    document.add_heading("Submitted essay", level=1)
+    document.add_paragraph(essay.strip())
+
+    document.add_heading("Overall score", level=1)
+    document.add_paragraph(f"{earned} / {maximum}")
+
+    document.add_heading("Detailed breakdown of scores", level=1)
+    table = document.add_table(rows=1, cols=2)
+    table.style = "Table Grid"
+    header_cells = table.rows[0].cells
+    header_cells[0].text = "Category"
+    header_cells[1].text = "Score"
+    for key, label in CRITERIA_LABELS.items():
+        row_cells = table.add_row().cells
+        row_cells[0].text = label
+        score = result["scores"][key]
+        row_cells[1].text = f"{score['score']} / {score['max']}"
+
+    document.add_heading("Comments and feedback for each category", level=1)
+    details = result.get("details") or {}
+    for key, label in CRITERIA_LABELS.items():
+        score = result["scores"][key]
+        section = details.get(key) or {}
+        document.add_heading(f"{label} ({score['score']} / {score['max']})", level=2)
+        document.add_paragraph(section.get("analysis", "No detailed analysis available."))
+
+        deductions = section.get("deductions") or []
+        if deductions:
+            document.add_paragraph("Reasons for deducted marks:")
+            for deduction in deductions:
+                document.add_paragraph(deduction, style="List Bullet")
+
+        if key in result["feedback"]:
+            document.add_paragraph(f"Feedback note: {result['feedback'][key]}")
+
+    document.add_heading("Suggestions for improvement", level=1)
+    for item in result.get("improvements", []):
+        document.add_paragraph(item, style="List Bullet")
+
+    buffer = BytesIO()
+    document.save(buffer)
+    return buffer.getvalue()
+
+
+def _wrap_text(text: str, width: int = 95) -> list[str]:
+    paragraphs = text.splitlines() or [text]
+    wrapped: list[str] = []
+    for paragraph in paragraphs:
+        stripped = paragraph.strip()
+        if not stripped:
+            wrapped.append("")
+            continue
+        wrapped.extend(dedent(stripped).splitlines())
+    return wrapped
+
+
+def build_pdf_report(question: str, essay: str, result: dict) -> bytes:
+    from reportlab.lib.pagesizes import A4
+    from reportlab.pdfbase.pdfmetrics import stringWidth
+    from reportlab.pdfgen import canvas
+
+    def wrap_lines(text: str, font_name: str, font_size: int, max_width: float) -> list[str]:
+        output: list[str] = []
+        for paragraph in text.splitlines():
+            if not paragraph.strip():
+                output.append("")
+                continue
+            words = paragraph.split()
+            current = words[0]
+            for word in words[1:]:
+                trial = f"{current} {word}"
+                if stringWidth(trial, font_name, font_size) <= max_width:
+                    current = trial
+                else:
+                    output.append(current)
+                    current = word
+            output.append(current)
+        return output
+
+    earned, maximum = total_score(result["scores"])
+    buffer = BytesIO()
+    pdf = canvas.Canvas(buffer, pagesize=A4)
+    width, height = A4
+    left = 50
+    top = height - 50
+    line_height = 15
+    max_width = width - 2 * left
+    y = top
+
+    def ensure_space(lines_needed: int = 1) -> None:
+        nonlocal y
+        if y - (lines_needed * line_height) < 50:
+            pdf.showPage()
+            y = top
+
+    def draw_block(text: str, font_name: str = "Helvetica", font_size: int = 11) -> None:
+        nonlocal y
+        lines = wrap_lines(text, font_name, font_size, max_width)
+        ensure_space(max(1, len(lines)))
+        pdf.setFont(font_name, font_size)
+        for line in lines:
+            pdf.drawString(left, y, line)
+            y -= line_height
+
+    draw_block("Essay Report", "Helvetica-Bold", 16)
+    y -= 5
+    draw_block("Essay question", "Helvetica-Bold", 13)
+    draw_block(question.strip())
+    y -= 5
+    draw_block("Submitted essay", "Helvetica-Bold", 13)
+    draw_block(essay.strip())
+    y -= 5
+    draw_block("Overall score", "Helvetica-Bold", 13)
+    draw_block(f"{earned} / {maximum}")
+    y -= 5
+    draw_block("Detailed breakdown of scores", "Helvetica-Bold", 13)
+    for key, label in CRITERIA_LABELS.items():
+        score = result["scores"][key]
+        draw_block(f"{label}: {score['score']} / {score['max']}", "Helvetica", 11)
+
+    y -= 5
+    draw_block("Comments and feedback for each category", "Helvetica-Bold", 13)
+    details = result.get("details") or {}
+    for key, label in CRITERIA_LABELS.items():
+        score = result["scores"][key]
+        section = details.get(key) or {}
+        draw_block(f"{label} ({score['score']} / {score['max']})", "Helvetica-Bold", 12)
+        draw_block(section.get("analysis", "No detailed analysis available."))
+        deductions = section.get("deductions") or []
+        if deductions:
+            draw_block("Reasons for deducted marks:", "Helvetica-Bold", 11)
+            for deduction in deductions:
+                draw_block(f"- {deduction}")
+        if key in result["feedback"]:
+            draw_block(f"Feedback note: {result['feedback'][key]}")
+        y -= 3
+
+    draw_block("Suggestions for improvement", "Helvetica-Bold", 13)
+    for item in result.get("improvements", []):
+        draw_block(f"- {item}")
+
+    pdf.save()
+    return buffer.getvalue()
+
+
+def render_export_buttons(question: str, essay: str, result: dict) -> None:
+    st.markdown("**Export Essay Report**")
+    markdown_report = build_markdown_report(question, essay, result)
+    markdown_col, word_col, pdf_col = st.columns(3)
+
+    with markdown_col:
+        st.download_button(
+            "Export as Markdown",
+            data=markdown_report.encode("utf-8"),
+            file_name="essay-report.md",
+            mime="text/markdown",
+            use_container_width=True,
+        )
+
+    with word_col:
+        try:
+            word_report = build_docx_report(question, essay, result)
+            st.download_button(
+                "Export as Word",
+                data=word_report,
+                file_name="essay-report.docx",
+                mime="application/vnd.openxmlformats-officedocument.wordprocessingml.document",
+                use_container_width=True,
+            )
+        except ImportError:
+            st.button("Export as Word", disabled=True, use_container_width=True)
+            st.caption("Install `python-docx` to enable Word export.")
+
+    with pdf_col:
+        try:
+            pdf_report = build_pdf_report(question, essay, result)
+            st.download_button(
+                "Export as PDF",
+                data=pdf_report,
+                file_name="essay-report.pdf",
+                mime="application/pdf",
+                use_container_width=True,
+            )
+        except ImportError:
+            st.button("Export as PDF", disabled=True, use_container_width=True)
+            st.caption("Install `reportlab` to enable PDF export.")
+
+
 st.set_page_config(page_title="PTE Essay Marker", layout="wide")
 if "question" not in st.session_state:
     st.session_state.question = ""
@@ -291,6 +575,7 @@ if result:
     render_points("Improvements", result["improvements"])
     if result.get("details"):
         render_details(result["details"], result["scores"])
+    render_export_buttons(question, essay, result)
 else:
     st.subheader("Results")
     message = "Submit an essay to see score breakdowns, targeted feedback, and improvement suggestions."

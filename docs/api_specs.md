@@ -35,10 +35,12 @@ Example response:
 
 ### `POST /api/grade-essay`
 
-Grades a PTE essay using a hybrid strategy:
+Grades a PTE essay using the hybrid scoring pipeline:
+
 - deterministic baseline scoring for measurable features
-- LLM-driven qualitative grading and feedback
-- bounded merge rules for final numeric scores
+- LLM-generated grading and feedback
+- bounded score merging
+- detailed category-by-category explanations
 
 Request body:
 
@@ -63,17 +65,62 @@ Successful response body:
     "vocabulary": { "score": 2, "max": 2 }
   },
   "feedback": {
-    "form": "Good, no form errors detected.",
-    "grammar": "Grammar is accurate and varied throughout the essay.",
-    "spelling": "No spelling errors detected."
+    "form": "Length is within the official PTE target band of 200-300 words.",
+    "grammar": "Grammar shows strong control, with accurate sentences and some complexity.",
+    "spelling": "No spelling errors were detected at token level."
   },
   "good_points": [
     "Answers the question directly and maintains focus throughout."
   ],
   "improvements": [
     "A brief real-world example could make the argument even more persuasive."
-  ]
+  ],
+  "details": {
+    "content": {
+      "analysis": "Content was judged against prompt relevance and task coverage...",
+      "deductions": [
+        "The response does not fully cover every aspect of the prompt, so content credit was reduced."
+      ]
+    },
+    "development_structure_coherence": {
+      "analysis": "Development, structure, and coherence were judged from paragraphing, progression, and linking...",
+      "deductions": []
+    },
+    "form": {
+      "analysis": "Form was judged using official PTE-style length and presentation checks...",
+      "deductions": []
+    },
+    "grammar": {
+      "analysis": "Grammar was judged from sentence-level error patterns and control of structure...",
+      "deductions": []
+    },
+    "linguistic_range": {
+      "analysis": "Linguistic range was judged from sentence variety and language flexibility...",
+      "deductions": []
+    },
+    "spelling": {
+      "analysis": "Spelling was judged at token level using the vendored dictionary and explicit misspelling checks...",
+      "deductions": []
+    },
+    "vocabulary": {
+      "analysis": "Vocabulary was judged from lexical variety, appropriateness, and precision...",
+      "deductions": []
+    }
+  }
 }
+```
+
+Example frontend-facing interpretation:
+
+```text
+Results
+
+Overall score: 21 / 26
+
+Detail -> Content
+Analysis: Content was judged against prompt relevance and task coverage...
+Why marks were deducted:
+- The response does not fully cover every aspect of the prompt.
 ```
 
 ## Error behavior
@@ -103,7 +150,10 @@ curl -X POST http://localhost:8000/api/grade-essay \
 
 ### `POST /api/analyze-deterministic`
 
-Runs the deterministic scoring layer without calling the LLM. It now uses:
+Runs the deterministic scoring layer without calling the LLM.
+
+This endpoint now uses:
+
 - prompt-aware content relevance
 - Pearson-style raw trait scoring before rubric mapping
 - token-level spelling detection backed by the vendored dictionary in `data/words.txt`
@@ -115,12 +165,12 @@ Example response body:
 {
   "scores": {
     "content": { "score": 4, "max": 6 },
-    "development_structure_coherence": { "score": 4, "max": 6 },
+    "development_structure_coherence": { "score": 6, "max": 6 },
     "form": { "score": 2, "max": 2 },
     "grammar": { "score": 2, "max": 2 },
-    "linguistic_range": { "score": 4, "max": 6 },
+    "linguistic_range": { "score": 6, "max": 6 },
     "spelling": { "score": 2, "max": 2 },
-    "vocabulary": { "score": 1, "max": 2 }
+    "vocabulary": { "score": 2, "max": 2 }
   },
   "feedback": {
     "form": "The response addresses the prompt directly and covers the task adequately. Length is within the official PTE target band of 200-300 words.",

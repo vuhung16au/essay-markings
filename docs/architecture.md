@@ -2,24 +2,24 @@
 
 ## Overview
 
-The application uses a simple local client-server flow:
+The app uses a local client-server flow with a hybrid grading backend.
 
 1. Streamlit collects the essay question and essay text.
-2. The frontend sends a POST request to the FastAPI backend.
-3. The backend builds a PTE grading prompt in `backend/core/prompt_builder.py`.
-4. The deterministic scorer computes stable baseline signals and scores.
-5. `backend/services/llm_service.py` sends the prompt to LM Studio through the OpenAI SDK.
-6. The hybrid grader merges deterministic and LLM outputs into bounded final scores.
-7. The backend validates the returned JSON with Pydantic models from `backend/core/schemas.py`.
-8. The frontend renders the validated result.
+2. The frontend sends `POST /api/grade-essay` to the FastAPI backend.
+3. The deterministic scorer computes a stable baseline using measurable text signals.
+4. The prompt builder prepares the PTE grading prompt for the local LLM.
+5. The LLM service calls LM Studio through an OpenAI-compatible API.
+6. The hybrid grader merges deterministic and LLM outputs under rule-based bounds.
+7. Pydantic validates the final response payload.
+8. The frontend renders the scores, feedback, details, and export options.
 
-The codebase also now includes a deterministic scoring layer that can analyze measurable text features without calling the LLM. This is intended to become the stable baseline in a future hybrid scoring strategy.
+There is also a deterministic-only path through `POST /api/analyze-deterministic`.
 
 ## Diagram
 
 ```mermaid
 graph TD
-    User([User]) -->|Inputs essay and question| UI[Streamlit frontend]
+    User([User]) -->|Inputs question and essay| UI[Streamlit frontend]
     UI -->|POST /api/grade-essay| API[FastAPI backend]
 
     subgraph Local Machine
@@ -35,29 +35,63 @@ graph TD
 
     Validate --> API
     API --> UI
-    UI -->|Displays scores and feedback| User
+    UI -->|Displays detailed results and exports| User
 ```
 
 ## Backend components
 
-- `backend/main.py`: FastAPI app, CORS setup, and endpoints
-- `backend/core/config.py`: loads `.env.local` and exposes typed settings
-- `backend/core/schemas.py`: request and response validation models
-- `backend/core/prompt_builder.py`: builds the system and user prompt pair
-- `backend/services/llm_service.py`: LM Studio client, JSON extraction, validation, and retry
-- `backend/services/deterministic_scorer.py`: deterministic baseline analysis using text features such as word count, paragraphing, transitions, and repeated error patterns
-- `backend/services/hybrid_grader.py`: merges deterministic baseline scores with bounded LLM scoring and feedback
+- [backend/main.py](/Users/vuhung/00.Work/00.Workspace/essay-markings/backend/main.py)
+  - FastAPI app
+  - health endpoint
+  - grading endpoints
+- [backend/core/config.py](/Users/vuhung/00.Work/00.Workspace/essay-markings/backend/core/config.py)
+  - loads `.env.local`
+  - exposes typed settings
+- [backend/core/schemas.py](/Users/vuhung/00.Work/00.Workspace/essay-markings/backend/core/schemas.py)
+  - request/response schemas
+  - detailed result payloads
+  - deterministic signal models
+- [backend/core/prompt_builder.py](/Users/vuhung/00.Work/00.Workspace/essay-markings/backend/core/prompt_builder.py)
+  - builds the grading prompt for the LLM
+- [backend/services/deterministic_scorer.py](/Users/vuhung/00.Work/00.Workspace/essay-markings/backend/services/deterministic_scorer.py)
+  - Pearson-aligned deterministic baseline
+  - prompt-aware content relevance
+  - token-level spelling
+  - sentence-level grammar/discourse signals
+  - raw trait scoring mapped to the app rubric
+- [backend/services/llm_service.py](/Users/vuhung/00.Work/00.Workspace/essay-markings/backend/services/llm_service.py)
+  - LM Studio client
+  - JSON extraction and normalization
+  - defensive validation and fallback handling
+- [backend/services/hybrid_grader.py](/Users/vuhung/00.Work/00.Workspace/essay-markings/backend/services/hybrid_grader.py)
+  - bounded merge of deterministic and LLM outputs
+  - Pearson-style content/form gating
+  - detailed category explanations and deduction reasons
 
 ## Frontend components
 
-- `frontend/app.py`: Streamlit UI, sample loader, API submission, and results rendering
-- `frontend/assets/styles.css`: visual styling for the form and result sections
+- [frontend/app.py](/Users/vuhung/00.Work/00.Workspace/essay-markings/frontend/app.py)
+  - Streamlit UI
+  - sample loader
+  - backend submission
+  - detailed results rendering
+  - Markdown/Word/PDF report export
+- [frontend/assets/styles.css](/Users/vuhung/00.Work/00.Workspace/essay-markings/frontend/assets/styles.css)
+  - app styling
+  - dark/light theme support
+
+## Data and support files
+
+- [data/sample_questions.json](/Users/vuhung/00.Work/00.Workspace/essay-markings/data/sample_questions.json)
+- [data/sample_essays.json](/Users/vuhung/00.Work/00.Workspace/essay-markings/data/sample_essays.json)
+- [data/expected_outputs.json](/Users/vuhung/00.Work/00.Workspace/essay-markings/data/expected_outputs.json)
+- [data/words.txt](/Users/vuhung/00.Work/00.Workspace/essay-markings/data/words.txt)
+  - vendored dictionary used by the deterministic spelling checker
 
 ## Current behavior
 
-- The frontend talks directly to the backend over HTTP.
-- The backend returns `502` when LM Studio is unreachable or returns invalid output.
-- The frontend surfaces backend failures as user-friendly messages.
-- Sample essays and questions are stored locally in `data/` for quick testing.
-- A deterministic analysis endpoint is available for stable non-LLM scoring experiments.
-- The primary grading endpoint now uses a hybrid scoring strategy so the LLM no longer has unchecked control over final numeric scores.
+- The app does not rely on pure LLM scoring for final numeric results.
+- The deterministic scorer acts as a stable scoring anchor.
+- The LLM contributes qualitative judgment and narrative feedback.
+- The hybrid layer prevents the LLM from bypassing hard content/form gates.
+- The frontend can export the current report as Markdown, Word, or PDF.
