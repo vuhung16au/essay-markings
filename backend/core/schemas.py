@@ -37,6 +37,25 @@ class ScoreBundle(BaseModel):
     vocabulary: ScoreDetail
 
 
+class CategoryDetail(BaseModel):
+    model_config = ConfigDict(extra="forbid")
+
+    analysis: str
+    deductions: list[str] = Field(default_factory=list)
+
+
+class DetailBundle(BaseModel):
+    model_config = ConfigDict(extra="forbid")
+
+    content: CategoryDetail
+    development_structure_coherence: CategoryDetail
+    form: CategoryDetail
+    grammar: CategoryDetail
+    linguistic_range: CategoryDetail
+    spelling: CategoryDetail
+    vocabulary: CategoryDetail
+
+
 class EssayResponse(BaseModel):
     model_config = ConfigDict(extra="forbid")
 
@@ -44,6 +63,7 @@ class EssayResponse(BaseModel):
     feedback: FeedbackDetail
     good_points: list[str] = Field(min_length=1, max_length=5)
     improvements: list[str] = Field(min_length=1, max_length=5)
+    details: DetailBundle | None = None
 
 
 class DeterministicSignals(BaseModel):

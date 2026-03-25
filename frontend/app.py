@@ -182,6 +182,22 @@ def render_points(title: str, points: list[str]) -> None:
         st.write(f"- {point}")
 
 
+def render_details(details: dict, scores: dict) -> None:
+    st.markdown("**Detail**")
+    for key, label in CRITERIA_LABELS.items():
+        item = details[key]
+        score = scores[key]
+        with st.expander(f"{label} ({score['score']} / {score['max']})", expanded=False):
+            st.write(item["analysis"])
+            deductions = item.get("deductions") or []
+            if deductions:
+                st.markdown("**Why marks were deducted**")
+                for deduction in deductions:
+                    st.write(f"- {deduction}")
+            else:
+                st.caption("No deductions were applied in this category.")
+
+
 st.set_page_config(page_title="PTE Essay Marker", layout="wide")
 if "question" not in st.session_state:
     st.session_state.question = ""
@@ -273,6 +289,8 @@ if result:
 
     render_points("Good points", result["good_points"])
     render_points("Improvements", result["improvements"])
+    if result.get("details"):
+        render_details(result["details"], result["scores"])
 else:
     st.subheader("Results")
     message = "Submit an essay to see score breakdowns, targeted feedback, and improvement suggestions."
