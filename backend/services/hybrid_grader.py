@@ -15,6 +15,16 @@ def _merge_scores(deterministic: dict, llm: dict) -> dict:
     det_scores = deterministic["scores"]
     llm_scores = llm["scores"]
 
+    if det_scores["content"]["score"] == 0:
+        return {key: {"score": 0, "max": value["max"]} for key, value in det_scores.items()}
+
+    if det_scores["form"]["score"] == 0:
+        merged = {}
+        for key, value in det_scores.items():
+            score = value["score"] if key == "content" else 0
+            merged[key] = {"score": score, "max": value["max"]}
+        return merged
+
     merged = {}
 
     for key in det_scores:

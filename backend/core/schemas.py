@@ -56,6 +56,11 @@ class DeterministicSignals(BaseModel):
     typo_hits: int = Field(ge=0)
     grammar_pattern_hits: int = Field(ge=0)
     generic_phrase_hits: int = Field(ge=0)
+    prompt_keyword_overlap: int = Field(ge=0)
+    prompt_coverage_ratio: float = Field(ge=0)
+    all_caps_ratio: float = Field(ge=0)
+    bullet_line_count: int = Field(ge=0)
+    punctuation_count: int = Field(ge=0)
 
 
 class DeterministicAnalysisResponse(BaseModel):
