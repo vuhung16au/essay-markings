@@ -156,7 +156,7 @@ This endpoint now uses:
 
 - prompt-aware content relevance
 - Pearson-style raw trait scoring before rubric mapping
-- token-level spelling detection backed by the vendored dictionary in `data/words.txt`
+- token-level spelling detection backed by the vendored SCOWL dictionary in `data/words.txt`
 - sentence-level grammar and discourse signals
 
 Example response body:

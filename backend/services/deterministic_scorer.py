@@ -118,28 +118,17 @@ STOPWORDS = {
 }
 
 SPELLING_ALLOWLIST = {
-    "academically",
     "behaviour",
-    "colloquialisms",
-    "fluency",
-    "has",
-    "governmental",
-    "healthcare",
-    "laboratory",
     "labour",
     "memorising",
-    "metro",
     "organisation",
     "organise",
     "organised",
     "organising",
-    "okay",
     "pearson",
     "prioritising",
     "pte",
     "real-time",
-    "sustainability",
-    "lifestyle",
 }
 
 KNOWN_MISSPELLINGS = {

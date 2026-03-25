@@ -86,7 +86,9 @@ graph TD
 - [data/sample_essays.json](/Users/vuhung/00.Work/00.Workspace/essay-markings/data/sample_essays.json)
 - [data/expected_outputs.json](/Users/vuhung/00.Work/00.Workspace/essay-markings/data/expected_outputs.json)
 - [data/words.txt](/Users/vuhung/00.Work/00.Workspace/essay-markings/data/words.txt)
-  - vendored dictionary used by the deterministic spelling checker
+  - vendored SCOWL-based dictionary used by the deterministic spelling checker
+- [data/words.SOURCE.md](/Users/vuhung/00.Work/00.Workspace/essay-markings/data/words.SOURCE.md)
+  - source, command, and licensing note for the vendored word list
 
 ## Current behavior
 

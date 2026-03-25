@@ -50,7 +50,7 @@ Instead, the main grading endpoint uses a hybrid strategy:
   - official form thresholds
   - content/form gating
   - raw-trait scoring before rubric mapping
-  - vendored dictionary in [data/words.txt](/Users/vuhung/00.Work/00.Workspace/essay-markings/data/words.txt)
+  - vendored SCOWL-based dictionary in [data/words.txt](/Users/vuhung/00.Work/00.Workspace/essay-markings/data/words.txt)
 
 ## Tech stack
 
@@ -105,6 +105,7 @@ The backend expects LM Studio to expose an OpenAI-compatible `/v1` API.
 - [docs/architecture.md](/Users/vuhung/00.Work/00.Workspace/essay-markings/docs/architecture.md)
 - [docs/api_specs.md](/Users/vuhung/00.Work/00.Workspace/essay-markings/docs/api_specs.md)
 - [docs/scoring.md](/Users/vuhung/00.Work/00.Workspace/essay-markings/docs/scoring.md)
+- [data/words.SOURCE.md](/Users/vuhung/00.Work/00.Workspace/essay-markings/data/words.SOURCE.md)
 
 ## Sample result snippet
 

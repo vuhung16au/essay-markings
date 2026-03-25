@@ -85,8 +85,10 @@ The deterministic scorer currently considers:
 ### Spelling
 
 - token-level spelling detection
-- vendored dictionary in [data/words.txt](/Users/vuhung/00.Work/00.Workspace/essay-markings/data/words.txt)
+- vendored SCOWL-generated dictionary in [data/words.txt](/Users/vuhung/00.Work/00.Workspace/essay-markings/data/words.txt)
 - known misspelling checks such as `childrens` and `dont`
+
+Source and generation notes are recorded in [words.SOURCE.md](/Users/vuhung/00.Work/00.Workspace/essay-markings/data/words.SOURCE.md).
 
 ### Linguistic Range
 
