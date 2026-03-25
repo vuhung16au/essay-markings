@@ -2,6 +2,8 @@
 
 from __future__ import annotations
 
+import re
+
 from core.schemas import EssayResponse
 from services.deterministic_scorer import score_essay_deterministic
 from services.llm_service import grade_essay
@@ -53,10 +55,12 @@ def _merge_feedback(deterministic: dict, llm: dict) -> dict:
     llm_feedback = llm["feedback"]
 
     feedback = {}
-    for key in ("form", "grammar", "spelling"):
-        llm_text = llm_feedback.get(key, "").strip()
-        det_text = det_feedback.get(key, "").strip()
-        feedback[key] = llm_text or det_text
+    feedback["form"] = det_feedback.get("form", "").strip()
+    feedback["spelling"] = det_feedback.get("spelling", "").strip()
+
+    llm_text = llm_feedback.get("grammar", "").strip()
+    det_text = det_feedback.get("grammar", "").strip()
+    feedback["grammar"] = llm_text or det_text
     return feedback
 
 
@@ -71,14 +75,65 @@ def _join_examples(points: list[str], limit: int = 2) -> str:
     return "; ".join(selected)
 
 
+def _essay_sentences(essay: str) -> list[str]:
+    parts = re.split(r"(?<=[.!?])\s+|\n+", essay.strip())
+    return [part.strip() for part in parts if part.strip()]
+
+
+def _essay_paragraphs(essay: str) -> list[str]:
+    return [part.strip() for part in essay.split("\n\n") if part.strip()]
+
+
+def _quote(text: str, limit: int = 180) -> str:
+    compact = " ".join(text.split())
+    if len(compact) <= limit:
+        return compact
+    return compact[: limit - 3].rstrip() + "..."
+
+
+def _extract_feedback_example(text: str) -> str | None:
+    match = re.search(r"'([^']+)'", text)
+    if match:
+        return match.group(1).strip()
+    return None
+
+
+def _find_sentence_containing(sentences: list[str], phrase: str | None) -> str | None:
+    if not phrase:
+        return None
+    lowered = phrase.lower()
+    for sentence in sentences:
+        if lowered in sentence.lower():
+            return sentence
+    return None
+
+
+def _first_argument_sentence(sentences: list[str]) -> str | None:
+    for sentence in sentences:
+        lowered = sentence.lower()
+        if lowered.startswith(("first", "second", "for instance", "for example", "another", "however")):
+            return sentence
+    for sentence in sentences[1:]:
+        if len(sentence.split()) >= 8:
+            return sentence
+    return sentences[0] if sentences else None
+
+
 def _build_details(
     deterministic: dict,
     merged_scores: dict,
     feedback: dict,
     good_points: list[str],
     improvements: list[str],
+    essay: str,
 ) -> dict:
     signals = deterministic["signals"]
+    sentences = _essay_sentences(essay)
+    paragraphs = _essay_paragraphs(essay)
+    first_argument = _first_argument_sentence(sentences)
+    grammar_example_phrase = _extract_feedback_example(feedback["grammar"])
+    grammar_example_sentence = _find_sentence_containing(sentences, grammar_example_phrase)
+    spelling_example = _extract_feedback_example(feedback["spelling"])
 
     content_analysis = (
         "This score reflects how clearly the essay answers the question and how fully the main ideas are developed. "
@@ -94,8 +149,14 @@ def _build_details(
             content_deductions.append(
                 "The essay would be stronger if it addressed the question more completely and directly throughout."
             )
+        if first_argument:
+            content_deductions.append(
+                f'Your essay writes: "{_quote(first_argument)}" This point is relevant, but it would score more strongly if you added a concrete example, explanation, or result.'
+            )
         if improvements:
-            content_deductions.append(f"Suggested next step: {_join_examples(improvements, 1)}.")
+            content_deductions.append(
+                f"To improve this, expand one of your main points with a specific example. Suggested next step: {_join_examples(improvements, 1)}."
+            )
 
     development_analysis = (
         "This score reflects how well the essay is organized, how smoothly ideas connect, and how clearly the argument progresses. "
@@ -110,6 +171,17 @@ def _build_details(
         development_deductions.append(
             "Some arguments or examples need clearer sequencing and stronger logical links."
         )
+        if first_argument:
+            development_deductions.append(
+                f'Your essay writes: "{_quote(first_argument)}" The idea itself is useful, but it would be easier to follow if it were introduced, explained, and then linked clearly to the next point.'
+            )
+            development_deductions.append(
+                "To improve this, place one main idea in each paragraph and end the paragraph by linking it back to your overall argument."
+            )
+        elif len(paragraphs) <= 1:
+            development_deductions.append(
+                "To improve this, separate the essay into a clear introduction, body paragraphs, and conclusion so each idea has its own space."
+            )
 
     form_analysis = (
         "This score reflects whether the essay is presented in an appropriate academic essay format and stays within the expected length range. "
@@ -125,6 +197,9 @@ def _build_details(
             form_deductions.append("The response should be written as a continuous essay rather than as bullet points.")
         if signals["all_caps_ratio"] > 0.85:
             form_deductions.append("Using capital letters throughout weakens the formal presentation of the essay.")
+        form_deductions.append(
+            "To improve this, keep the essay in standard paragraph form and aim for a clear academic structure within the target length."
+        )
 
     grammar_analysis = (
         "This score reflects the accuracy and control of sentence construction across the essay. "
@@ -140,6 +215,17 @@ def _build_details(
             grammar_deductions.append(
                 "Using a wider range of accurate sentence patterns would strengthen this category."
             )
+        if grammar_example_sentence:
+            grammar_deductions.append(
+                f'Your essay writes: "{_quote(grammar_example_sentence)}" This sentence would be stronger if the grammar were tightened so the meaning sounds more natural and precise.'
+            )
+        elif grammar_example_phrase:
+            grammar_deductions.append(
+                f'One phrase to review is "{grammar_example_phrase}". Rewrite it as a complete, natural sentence that fits smoothly into the paragraph.'
+            )
+        grammar_deductions.append(
+            "To improve this, revise sentences with article, verb-form, or phrasing problems and read them aloud to check whether they sound complete and natural."
+        )
 
     linguistic_analysis = (
         "This score reflects how flexibly the essay uses language, including sentence variety and the ability to express ideas clearly. "
@@ -153,6 +239,13 @@ def _build_details(
             linguistic_deductions.append("More precise academic-style language would strengthen the overall range.")
         if signals["complex_sentence_count"] < max(2, signals["sentence_count"] // 3):
             linguistic_deductions.append("More varied sentence structures would make the writing sound more mature and flexible.")
+        if first_argument:
+            linguistic_deductions.append(
+                f'Your essay writes: "{_quote(first_argument)}" This idea is clear, but it could sound more advanced if you varied the sentence structure and used more precise phrasing.'
+            )
+        linguistic_deductions.append(
+            "To improve this, combine simple and complex sentence forms and vary how you introduce reasons, examples, and conclusions."
+        )
 
     spelling_analysis = (
         "This score reflects spelling accuracy across the essay. "
@@ -162,6 +255,13 @@ def _build_details(
     if merged_scores["spelling"]["score"] < merged_scores["spelling"]["max"]:
         spelling_deductions.append(
             "A spelling mistake was found, so the essay did not receive full marks for spelling."
+        )
+        if spelling_example:
+            spelling_deductions.append(
+                f'Your essay writes: "{spelling_example}". Check this word carefully and replace it with the correct spelling in the final draft.'
+            )
+        spelling_deductions.append(
+            "To improve this, leave time for a final spelling check, especially for common errors and contractions."
         )
 
     vocabulary_analysis = (
@@ -173,6 +273,13 @@ def _build_details(
         vocabulary_deductions.append("Word choice is clear, but not consistently precise or wide-ranging enough for full credit.")
         if signals["generic_phrase_hits"] > 0:
             vocabulary_deductions.append("Some expressions are too general, which weakens the impact of the argument.")
+        if first_argument:
+            vocabulary_deductions.append(
+                f'Your essay writes: "{_quote(first_argument)}" This communicates the idea, but a more precise verb or noun choice would make the argument stronger.'
+            )
+        vocabulary_deductions.append(
+            "To improve this, replace general words with more exact academic vocabulary and avoid repeating the same wording across paragraphs."
+        )
 
     if good_points:
         content_analysis = f"{content_analysis} Strength noted: {_join_examples(good_points, 1)}."
@@ -211,6 +318,7 @@ async def grade_essay_hybrid(question: str, essay: str) -> dict:
             merged_feedback,
             good_points,
             improvements,
+            essay,
         ),
     }
     merged["good_points"] = good_points
