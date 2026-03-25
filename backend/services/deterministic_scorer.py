@@ -146,6 +146,9 @@ KNOWN_MISSPELLINGS = {
     "dont",
 }
 
+PROJECT_ROOT = Path(__file__).resolve().parents[2]
+REPO_DICTIONARY_PATH = PROJECT_ROOT / "data" / "words.txt"
+
 
 def _word_tokens(text: str) -> list[str]:
     return re.findall(r"[A-Za-z]+(?:['-][A-Za-z]+)*", text)
@@ -216,14 +219,11 @@ def _punctuation_count(text: str) -> int:
 @lru_cache(maxsize=1)
 def _dictionary_words() -> set[str]:
     dictionary: set[str] = set(SPELLING_ALLOWLIST)
-    for path in (Path("/usr/share/dict/words"), Path("/usr/dict/words")):
-        if not path.exists():
-            continue
-        for line in path.read_text(encoding="utf-8", errors="ignore").splitlines():
+    if REPO_DICTIONARY_PATH.exists():
+        for line in REPO_DICTIONARY_PATH.read_text(encoding="utf-8", errors="ignore").splitlines():
             word = line.strip().lower()
             if word:
                 dictionary.add(word)
-        break
     return dictionary
 
 

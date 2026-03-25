@@ -106,7 +106,7 @@ curl -X POST http://localhost:8000/api/grade-essay \
 Runs the deterministic scoring layer without calling the LLM. It now uses:
 - prompt-aware content relevance
 - Pearson-style raw trait scoring before rubric mapping
-- token-level spelling detection
+- token-level spelling detection backed by the vendored dictionary in `data/words.txt`
 - sentence-level grammar and discourse signals
 
 Example response body:
