@@ -6,11 +6,18 @@
 - Project name: SCOWLv2 / English Speller Database
 - Copyright: Kevin Atkinson and contributors
 
-This repo currently uses a generated American English spell-check word list created from SCOWL with:
+This repo currently uses a generated multi-convention English spell-check word list created from SCOWL with:
 
 ```bash
-./scowl --db scowl.db word-list 60 A 1 --deaccent > wl.txt
+./scowl --db scowl.db word-list 60 A,B,C,D 1 --deaccent > wl.txt
 ```
+
+Where:
+
+- `A` = American
+- `B` = British
+- `C` = Canadian
+- `D` = Australian
 
 The generated list was then copied into this repository as:
 

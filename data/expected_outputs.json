@@ -4,29 +4,29 @@
     "question_id": 1,
     "response": {
       "scores": {
-        "content": { "score": 6, "max": 6 },
+        "content": { "score": 5, "max": 6 },
         "development_structure_coherence": { "score": 6, "max": 6 },
-        "form": { "score": 2, "max": 2 },
+        "form": { "score": 1, "max": 2 },
         "grammar": { "score": 2, "max": 2 },
         "linguistic_range": { "score": 6, "max": 6 },
         "spelling": { "score": 2, "max": 2 },
         "vocabulary": { "score": 2, "max": 2 }
       },
       "feedback": {
-        "form": "Good, no form errors detected.",
-        "grammar": "Grammar is accurate and varied throughout the essay.",
-        "spelling": "No spelling errors detected."
+        "form": "Length is outside the ideal band but still within the partial-credit form range.",
+        "grammar": "The essay demonstrates strong grammar skills with very few errors.",
+        "spelling": "No spelling errors were detected at token level."
       },
       "good_points": [
-        "Answers the question directly and maintains focus throughout.",
-        "Develops arguments with clear supporting reasons and examples.",
-        "Uses cohesive paragraphs and smooth transitions.",
-        "Demonstrates strong control of grammar and sentence variety.",
-        "Shows precise and mature academic vocabulary."
+        "The essay presents a clear and well-supported argument in favor of compulsory class attendance.",
+        "The writer uses specific reasons and details to support the answer.",
+        "The structure is logical, with clear transitions between paragraphs.",
+        "Vocabulary is precise and varied."
       ],
       "improvements": [
-        "A brief real-world example could make the argument even more persuasive.",
-        "One counterargument could be developed in slightly greater depth."
+        "Consider providing more nuanced examples or counterarguments to strengthen the argument.",
+        "Some sentences could be rephrased for better clarity and concision.",
+        "Add slightly more depth to the conclusion."
       ]
     }
   },
@@ -44,20 +44,19 @@
         "vocabulary": { "score": 2, "max": 2 }
       },
       "feedback": {
-        "form": "Good, no form errors detected.",
+        "form": "Length is within the official PTE target band of 200-300 words.",
         "grammar": "Mostly accurate grammar with only minor stylistic awkwardness.",
-        "spelling": "No spelling errors detected."
+        "spelling": "No spelling errors were detected at token level."
       },
       "good_points": [
-        "Presents a clear opinion and maintains it consistently.",
-        "Explains practical environmental and social benefits well.",
-        "Paragraphing is logical and easy to follow.",
-        "Uses relevant topic vocabulary accurately.",
-        "Acknowledges the need for roads, which adds balance."
+        "The essay presents a clear argument in favour of investing in public transport.",
+        "The response uses relevant supporting details and examples.",
+        "The writer shows a good understanding of the topic."
       ],
       "improvements": [
-        "Include a more specific example or statistic to strengthen the case.",
-        "Sentence variety could be expanded slightly for a more advanced style."
+        "Add more specific examples or statistics to strengthen the argument.",
+        "Improve linking between some ideas and paragraphs.",
+        "Use slightly more varied and precise vocabulary."
       ]
     }
   },
@@ -66,28 +65,28 @@
     "question_id": 3,
     "response": {
       "scores": {
-        "content": { "score": 4, "max": 6 },
+        "content": { "score": 3, "max": 6 },
         "development_structure_coherence": { "score": 4, "max": 6 },
         "form": { "score": 2, "max": 2 },
-        "grammar": { "score": 2, "max": 2 },
+        "grammar": { "score": 1, "max": 2 },
         "linguistic_range": { "score": 4, "max": 6 },
         "spelling": { "score": 2, "max": 2 },
         "vocabulary": { "score": 1, "max": 2 }
       },
       "feedback": {
-        "form": "Good, no form errors detected.",
-        "grammar": "Grammar is mostly correct, though the sentence patterns are fairly repetitive.",
-        "spelling": "No spelling errors detected."
+        "form": "Length is within the official PTE target band of 200-300 words.",
+        "grammar": "Meaning is mostly clear, but some grammar errors remain.",
+        "spelling": "No spelling errors were detected at token level."
       },
       "good_points": [
-        "Discusses both working-from-home and office-based perspectives.",
-        "The conclusion gives a clear personal opinion.",
-        "The overall organisation is easy to understand."
+        "The essay provides a balanced discussion of both views.",
+        "The writer uses transitional phrases to connect ideas.",
+        "The response stays relevant to the topic."
       ],
       "improvements": [
         "Develop the arguments with more specific examples and deeper explanation.",
-        "Use a wider range of vocabulary and sentence structures.",
-        "Add stronger linking between ideas to improve flow."
+        "Improve sentence control and clarity.",
+        "Use more sophisticated vocabulary."
       ]
     }
   },
@@ -96,28 +95,28 @@
     "question_id": 4,
     "response": {
       "scores": {
-        "content": { "score": 3, "max": 6 },
-        "development_structure_coherence": { "score": 3, "max": 6 },
+        "content": { "score": 5, "max": 6 },
+        "development_structure_coherence": { "score": 2, "max": 6 },
         "form": { "score": 2, "max": 2 },
-        "grammar": { "score": 1, "max": 2 },
-        "linguistic_range": { "score": 2, "max": 6 },
+        "grammar": { "score": 0, "max": 2 },
+        "linguistic_range": { "score": 1, "max": 6 },
         "spelling": { "score": 1, "max": 2 },
         "vocabulary": { "score": 1, "max": 2 }
       },
       "feedback": {
-        "form": "Length is acceptable, but some sentences are awkwardly constructed.",
-        "grammar": "There are repeated subject-verb agreement and article errors, such as 'learning have' and 'it also bring'.",
-        "spelling": "Spelling issues include 'childrens' instead of 'children'."
+        "form": "Length is within the official PTE target band of 200-300 words.",
+        "grammar": "There are multiple noticeable grammar problems.",
+        "spelling": "One likely spelling error was detected: 'childrens'."
       },
       "good_points": [
-        "Addresses both advantages and disadvantages of an early start.",
-        "Maintains a recognisable essay structure with introduction, body, and conclusion.",
-        "Shows some awareness of practical teaching concerns."
+        "The essay clearly states an opinion on the topic.",
+        "The conclusion summarizes the writer's position.",
+        "The response stays on topic."
       ],
       "improvements": [
-        "Correct frequent grammar errors to improve clarity.",
-        "Use more precise vocabulary instead of simple repetitive wording.",
-        "Support the main points with clearer examples and fuller explanation."
+        "Add more depth and specific examples to support the arguments.",
+        "Correct grammar mistakes to improve clarity.",
+        "Strengthen links between ideas and paragraphs."
       ]
     }
   },
@@ -126,28 +125,28 @@
     "question_id": 5,
     "response": {
       "scores": {
-        "content": { "score": 2, "max": 6 },
+        "content": { "score": 3, "max": 6 },
         "development_structure_coherence": { "score": 2, "max": 6 },
-        "form": { "score": 1, "max": 2 },
+        "form": { "score": 2, "max": 2 },
         "grammar": { "score": 0, "max": 2 },
         "linguistic_range": { "score": 1, "max": 6 },
-        "spelling": { "score": 0, "max": 2 },
+        "spelling": { "score": 1, "max": 2 },
         "vocabulary": { "score": 1, "max": 2 }
       },
       "feedback": {
-        "form": "The essay is underdeveloped and below the target length for a strong PTE response.",
-        "grammar": "Frequent grammar errors affect meaning, including incorrect verb forms and missing articles.",
-        "spelling": "Spelling errors include 'dont' instead of 'don't'."
+        "form": "Length is within the official PTE target band of 200-300 words.",
+        "grammar": "There are multiple noticeable grammar problems.",
+        "spelling": "One likely spelling error was detected: 'dont'."
       },
       "good_points": [
-        "The writer states a clear overall opinion.",
-        "There is at least some acknowledgement that research can have benefits."
+        "The essay presents a clear overall opinion.",
+        "The writer acknowledges that scientific research can still have benefits.",
+        "The response remains relevant to the prompt."
       ],
       "improvements": [
-        "Expand the essay substantially with clearer supporting reasons.",
-        "Fix basic grammar and punctuation errors that reduce readability.",
-        "Use more organised paragraph development and transitions.",
-        "Stay closer to formal academic English style."
+        "Add more specific examples to support the main points.",
+        "Improve sentence structure and grammar control.",
+        "Use more precise and varied vocabulary."
       ]
     }
   }

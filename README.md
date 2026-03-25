@@ -34,6 +34,16 @@ Instead, the main grading endpoint uses a hybrid strategy:
    - improvements
    - detailed category analysis with deduction reasons
 
+The scoring rubric now follows the direct Pearson-style essay bands documented in [Pearson-PTE-rubrics.md](/Users/vuhung/00.Work/00.Workspace/essay-markings/TODOs/Pearson-PTE-rubrics.md):
+
+- Content `0-6`
+- Development, Structure & Coherence `1-6` in normal scoring, with `0` possible through gating
+- Form `0-2`
+- Grammar `0-2`
+- Linguistic Range `0-6`
+- Spelling `0-2`
+- Vocabulary `0-2`
+
 ## Main features
 
 - FastAPI backend with:
@@ -49,8 +59,9 @@ Instead, the main grading endpoint uses a hybrid strategy:
 - Pearson-aligned deterministic baseline with:
   - official form thresholds
   - content/form gating
-  - raw-trait scoring before rubric mapping
+  - direct Pearson-style band scoring for content, development, and linguistic range
   - vendored SCOWL-based dictionary in [data/words.txt](/Users/vuhung/00.Work/00.Workspace/essay-markings/data/words.txt)
+  - support for accepted US/UK/AU/CA spellings with mixed-convention detection
 
 ## Tech stack
 
@@ -134,3 +145,4 @@ Detail -> Grammar
 - The frontend export buttons for Word and PDF require the installed dependencies from `uv sync`.
 - The deterministic scorer is intentionally more stable than the LLM and acts as the scoring anchor.
 - The LLM is still used for richer judgment and narrative feedback, but final numeric scores are bounded in code.
+- Sample fixtures in [data/expected_outputs.json](/Users/vuhung/00.Work/00.Workspace/essay-markings/data/expected_outputs.json) now reflect the current direct-band rubric implementation rather than the older mapped-band calibration.

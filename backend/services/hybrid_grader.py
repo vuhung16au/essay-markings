@@ -16,6 +16,7 @@ def _clamp(value: int, lower: int, upper: int) -> int:
 def _merge_scores(deterministic: dict, llm: dict) -> dict:
     det_scores = deterministic["scores"]
     llm_scores = llm["scores"]
+    signals = deterministic.get("signals", {})
 
     if det_scores["content"]["score"] == 0:
         return {key: {"score": 0, "max": value["max"]} for key, value in det_scores.items()}
@@ -43,11 +44,32 @@ def _merge_scores(deterministic: dict, llm: dict) -> dict:
         elif key == "vocabulary":
             final_score = _clamp(llm_score, max(0, det_score - 1), min(max_score, det_score + 1))
         elif key == "development_structure_coherence":
-            final_score = _clamp(llm_score, max(0, det_score - 1), min(max_score, det_score + 2))
+            final_score = _clamp(llm_score, max(0, det_score - 1), min(max_score, det_score + 1))
         else:
             final_score = _clamp(llm_score, max(0, det_score - 1), min(max_score, det_score + 1))
 
         merged[key] = {"score": final_score, "max": max_score}
+
+    if signals.get("spelling_error_count", 0) >= 1 and merged["grammar"]["score"] <= 1:
+        merged["development_structure_coherence"]["score"] = min(
+            merged["development_structure_coherence"]["score"],
+            3,
+        )
+        merged["linguistic_range"]["score"] = min(
+            merged["linguistic_range"]["score"],
+            2 if merged["grammar"]["score"] == 1 else 1,
+        )
+        merged["vocabulary"]["score"] = min(merged["vocabulary"]["score"], 1)
+
+    if signals.get("grammar_error_count", 0) >= 4:
+        merged["development_structure_coherence"]["score"] = min(
+            merged["development_structure_coherence"]["score"],
+            2,
+        )
+        merged["linguistic_range"]["score"] = min(
+            merged["linguistic_range"]["score"],
+            1,
+        )
 
     return merged
 
@@ -100,6 +122,10 @@ def _extract_feedback_example(text: str) -> str | None:
     return None
 
 
+def _extract_feedback_examples(text: str) -> list[str]:
+    return [match.strip() for match in re.findall(r"'([^']+)'", text)]
+
+
 def _find_sentence_containing(sentences: list[str], phrase: str | None) -> str | None:
     if not phrase:
         return None
@@ -136,6 +162,7 @@ def _build_details(
     grammar_example_phrase = _extract_feedback_example(feedback["grammar"])
     grammar_example_sentence = _find_sentence_containing(sentences, grammar_example_phrase)
     spelling_example = _extract_feedback_example(feedback["spelling"])
+    spelling_examples = _extract_feedback_examples(feedback["spelling"])
 
     content_analysis = (
         "This score reflects how clearly the essay answers the question and how fully the main ideas are developed. "
@@ -255,16 +282,27 @@ def _build_details(
     )
     spelling_deductions: list[str] = []
     if merged_scores["spelling"]["score"] < merged_scores["spelling"]["max"]:
-        spelling_deductions.append(
-            "A spelling mistake was found, so the essay did not receive full marks for spelling."
-        )
-        if spelling_example:
+        if "mixes conventions" in feedback["spelling"].lower() and len(spelling_examples) >= 2:
             spelling_deductions.append(
-                f'Your essay writes: "{spelling_example}". Check this word carefully and replace it with the correct spelling in the final draft.'
+                "The essay mixes accepted spelling conventions within the same response, so it did not receive full spelling credit."
             )
-        spelling_deductions.append(
-            "To improve this, leave time for a final spelling check, especially for common errors and contractions."
-        )
+            spelling_deductions.append(
+                f'Your essay uses both "{spelling_examples[0]}" and "{spelling_examples[1]}". Both forms can be valid, but they should not be mixed in one essay.'
+            )
+            spelling_deductions.append(
+                "To improve this, choose one spelling convention for the entire essay and keep it consistent from beginning to end."
+            )
+        else:
+            spelling_deductions.append(
+                "A spelling mistake was found, so the essay did not receive full marks for spelling."
+            )
+            if spelling_example:
+                spelling_deductions.append(
+                    f'Your essay writes: "{spelling_example}". Check this word carefully and replace it with the correct spelling in the final draft.'
+                )
+            spelling_deductions.append(
+                "To improve this, leave time for a final spelling check, especially for common errors and contractions."
+            )
 
     vocabulary_analysis = (
         "This score reflects the precision, appropriateness, and range of word choice used in the essay. "

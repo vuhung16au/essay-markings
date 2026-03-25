@@ -42,6 +42,16 @@ Grades a PTE essay using the hybrid scoring pipeline:
 - bounded score merging
 - detailed category-by-category explanations
 
+The scoring bands now follow the direct Pearson-style essay rubric:
+
+- `content: 0-6`
+- `development_structure_coherence: 1-6` in normal scoring, with `0` possible through content/form gating
+- `form: 0-2`
+- `grammar: 0-2`
+- `linguistic_range: 0-6`
+- `spelling: 0-2`
+- `vocabulary: 0-2`
+
 Request body:
 
 ```json
@@ -155,8 +165,10 @@ Runs the deterministic scoring layer without calling the LLM.
 This endpoint now uses:
 
 - prompt-aware content relevance
-- Pearson-style raw trait scoring before rubric mapping
+- direct Pearson-style band scoring for content, development, and linguistic range
 - token-level spelling detection backed by the vendored SCOWL dictionary in `data/words.txt`
+- acceptance of US/UK/AU/CA spelling variants
+- mixed-convention detection within a single essay
 - sentence-level grammar and discourse signals
 
 Example response body:
@@ -164,7 +176,7 @@ Example response body:
 ```json
 {
   "scores": {
-    "content": { "score": 4, "max": 6 },
+    "content": { "score": 5, "max": 6 },
     "development_structure_coherence": { "score": 6, "max": 6 },
     "form": { "score": 2, "max": 2 },
     "grammar": { "score": 2, "max": 2 },
@@ -195,14 +207,14 @@ Example response body:
     "complex_sentence_count": 7,
     "lexical_diversity": 0.54,
     "academic_word_ratio": 0.21,
-    "raw_content": 3,
-    "raw_development_structure_coherence": 2,
+    "raw_content": 5,
+    "raw_development_structure_coherence": 6,
     "raw_form": 2,
     "raw_grammar": 2,
-    "raw_linguistic_range": 2,
+    "raw_linguistic_range": 6,
     "raw_spelling": 2,
     "raw_vocabulary": 2
   },
-  "summary": "Deterministic baseline completed using prompt relevance, token-level spelling, sentence-level grammar signals, and Pearson-style raw trait mapping."
+  "summary": "Deterministic baseline completed using prompt relevance, token-level spelling, sentence-level grammar signals, and direct Pearson-style band scoring."
 }
 ```
