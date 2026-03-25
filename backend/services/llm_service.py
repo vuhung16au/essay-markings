@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import json
+import logging
 import re
 from json import JSONDecodeError
 
@@ -12,6 +13,9 @@ from openai import OpenAI
 from core.config import settings
 from core.prompt_builder import build_pte_prompt
 from core.schemas import EssayResponse
+
+
+logger = logging.getLogger(__name__)
 
 
 class LLMServiceError(Exception):
@@ -29,6 +33,7 @@ def _get_client() -> OpenAI | None:
         return build_client(settings.LLM_BASE_URL)
     except TypeError:
         # Older OpenAI SDK versions can be incompatible with newer httpx releases.
+        logger.info("Falling back to direct httpx client because OpenAI SDK init failed.")
         return None
 
 
@@ -377,6 +382,7 @@ def _request_grading(question: str, essay: str) -> dict:
                 response_format={"type": "text"},
             )
         except Exception as exc:
+            logger.warning("OpenAI SDK request failed: %s", exc)
             raise LLMServiceError(f"Failed to contact the local LLM server: {exc}") from exc
 
         message = response.choices[0].message.content if response.choices else None
@@ -402,6 +408,7 @@ def _request_grading(question: str, essay: str) -> dict:
         )
         response.raise_for_status()
     except Exception as exc:
+        logger.warning("Direct LM Studio request failed: %s", exc)
         raise LLMServiceError(f"Failed to contact the local LLM server: {exc}") from exc
 
     try:
@@ -432,6 +439,7 @@ async def grade_essay(question: str, essay: str) -> dict:
         except LLMServiceError as exc:
             last_error = exc
         except Exception as exc:
+            logger.warning("Validation of LLM payload failed: %s", exc)
             raise LLMServiceError(f"Failed to validate the LLM grading response: {exc}") from exc
 
     if last_error is not None:

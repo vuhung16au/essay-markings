@@ -85,6 +85,11 @@ def load_local_env() -> dict[str, str]:
     return values
 
 
+@st.cache_data(show_spinner=False)
+def cached_sample_data() -> tuple[list[dict], list[dict]]:
+    return load_sample_data()
+
+
 def get_backend_url() -> str:
     env_values = load_local_env()
     host = os.getenv("BACKEND_HOST") or env_values.get("BACKEND_HOST", "0.0.0.0")
@@ -103,7 +108,7 @@ def load_sample_data() -> tuple[list[dict], list[dict]]:
 
 
 def build_sample_options() -> dict[str, tuple[str, str]]:
-    questions, essays = load_sample_data()
+    questions, essays = cached_sample_data()
     question_lookup = {item["id"]: item["question"] for item in questions}
     options: dict[str, tuple[str, str]] = {}
     for essay in essays:
@@ -142,6 +147,16 @@ def submit_for_grading(question: str, essay: str) -> dict:
         ) from exc
 
 
+def backend_is_healthy() -> bool:
+    endpoint = f"{get_backend_url()}/health"
+    try:
+        with request.urlopen(endpoint, timeout=5) as response:
+            payload = json.loads(response.read().decode("utf-8"))
+            return payload.get("status") == "ok"
+    except Exception:
+        return False
+
+
 def render_scores(scores: dict) -> None:
     rows = []
     total = 0
@@ -174,6 +189,8 @@ if "essay" not in st.session_state:
     st.session_state.essay = ""
 if "result" not in st.session_state:
     st.session_state.result = None
+if "last_error" not in st.session_state:
+    st.session_state.last_error = None
 if "theme_mode" not in st.session_state:
     st.session_state.theme_mode = "Dark"
 
@@ -192,6 +209,11 @@ with toggle_col:
         key="theme_mode",
         label_visibility="collapsed",
     )
+
+if backend_is_healthy():
+    st.success("Backend connection is live.")
+else:
+    st.warning("Backend is not reachable right now. You can still draft an essay, but grading will fail until the API is running.")
 
 sample_options = build_sample_options()
 selected_sample = st.selectbox(
@@ -225,13 +247,17 @@ if essay and word_count < 200:
 
 if st.button("Submit for grading", type="primary"):
     if not question.strip() or not essay.strip():
+        st.session_state.last_error = "Please provide both the essay question and essay text."
         st.error("Please provide both the essay question and essay text.")
     else:
         with st.spinner("Sending essay to the grading API..."):
             try:
                 st.session_state.result = submit_for_grading(question.strip(), essay.strip())
+                st.session_state.last_error = None
+                st.success("Essay graded successfully.")
             except RuntimeError as exc:
                 st.session_state.result = None
+                st.session_state.last_error = str(exc)
                 st.error(str(exc))
 
 result = st.session_state.result
@@ -249,4 +275,7 @@ if result:
     render_points("Improvements", result["improvements"])
 else:
     st.subheader("Results")
-    st.info("Submit an essay to see score breakdowns, targeted feedback, and improvement suggestions.")
+    message = "Submit an essay to see score breakdowns, targeted feedback, and improvement suggestions."
+    if st.session_state.last_error:
+        message = f"{message} The latest request failed, but you can edit and resubmit."
+    st.info(message)
