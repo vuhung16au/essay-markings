@@ -1,0 +1,22 @@
+[
+  {
+    "id": 1,
+    "question": "Some people believe that university students should be required to attend classes. Others believe that going to classes should be optional. Which view do you agree with? Use specific reasons and details to support your answer."
+  },
+  {
+    "id": 2,
+    "question": "In many countries, governments are investing heavily in public transport. Do you think this is a better use of money than building more roads for private cars?"
+  },
+  {
+    "id": 3,
+    "question": "Many people think that working from home improves productivity, while others believe that employees perform better in a traditional office. Discuss both views and give your opinion."
+  },
+  {
+    "id": 4,
+    "question": "Some people argue that children should start learning a foreign language at primary school, while others think it is better to begin later. What is your opinion?"
+  },
+  {
+    "id": 5,
+    "question": "Scientific research often requires significant public funding. Should governments spend more money on scientific research than on other social needs? Why or why not?"
+  }
+]

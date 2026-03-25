@@ -24,7 +24,7 @@ Build a complete PTE Academic essay grading application with a Streamlit fronten
 ## Technical Stack (MANDATORY VERSIONS)
 
 **Core:**
-- Python: `3.12.2`
+- Python: `3.11`
 - Package Manager: `uv` (Rust-based, ultra-fast)
 
 **Dependencies:**
@@ -432,7 +432,7 @@ Execute these phases sequentially. Complete each phase fully before moving to th
    version = "0.1.0"
    description = "PTE Academic Essay Grading System with LLM"
    readme = "README.md"
-   requires-python = ">=3.12.2"
+   requires-python = ">=3.11"
    dependencies = [
        "streamlit==1.33.0",
        "fastapi==0.110.1",
