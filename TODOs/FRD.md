@@ -24,7 +24,7 @@ Build a complete PTE Academic essay grading application with a Streamlit fronten
 ## Technical Stack (MANDATORY VERSIONS)
 
 **Core:**
-- Python: `3.11`
+- Python: `3.13.9` (implemented)
 - Package Manager: `uv` (Rust-based, ultra-fast)
 
 **Dependencies:**
@@ -32,7 +32,7 @@ Build a complete PTE Academic essay grading application with a Streamlit fronten
 - `fastapi==0.110.1` - Backend API framework
 - `uvicorn==0.29.0` - ASGI server
 - `openai==1.16.2` - LLM client (pointing to localhost)
-- `pydantic==2.6.4` - Data validation and parsing
+- `pydantic==2.12.5` - Data validation and parsing
 - `python-dotenv==1.0.1` - Environment variable management
 
 ---
@@ -276,24 +276,24 @@ clean:
 
 #### 1. Root Level Files
 
-- [ ] `.gitignore`
-- [ ] `.env.example`
-- [ ] `Makefile`
-- [ ] `pyproject.toml` (use `uv` package manager format)
-- [ ] `README.md` (project overview)
-- [ ] `QUICKSTART.md` (setup guide)
-- [ ] `LICENSE.md` (MIT License)
+- [x] `.gitignore`
+- [x] `.env.example`
+- [x] `Makefile`
+- [x] `pyproject.toml` (use `uv` package manager format)
+- [x] `README.md` (project overview)
+- [x] `QUICKSTART.md` (setup guide)
+- [x] `LICENSE.md` (MIT License)
 
 #### 2. Documentation (`docs/`)
 
-- [ ] `docs/architecture.md` (include mermaid diagram from above)
-- [ ] `docs/api_specs.md` (document FastAPI endpoints)
+- [x] `docs/architecture.md` (include mermaid diagram from above)
+- [x] `docs/api_specs.md` (document FastAPI endpoints)
 
 #### 3. Sample Data (`data/`)
 
-- [ ] `data/sample_essays.json` (5 essays, 300 words each, quality: excellent → very poor)
-- [ ] `data/sample_questions.json` (5 PTE essay prompts)
-- [ ] `data/expected_outputs.json` (5 JSON objects matching the output schema)
+- [x] `data/sample_essays.json` (5 essays, 300 words each, quality: excellent → very poor)
+- [x] `data/sample_questions.json` (5 PTE essay prompts)
+- [x] `data/expected_outputs.json` (5 JSON objects matching the output schema)
 
 **Quality levels for essays:**
 1. **Excellent** (24-26/26): Perfect grammar, rich vocabulary, strong coherence
@@ -304,33 +304,33 @@ clean:
 
 #### 4. Backend Files (`backend/`)
 
-- [ ] `backend/main.py`
+- [x] `backend/main.py`
   - FastAPI app instance
   - CORS middleware configuration
   - POST `/api/grade-essay` endpoint
   - Request: `{ "question": str, "essay": str }`
   - Response: JSON matching PTE schema
   
-- [ ] `backend/core/config.py`
+- [x] `backend/core/config.py`
   - Use `python-dotenv` to load `.env.local` or `.env.*`
   - Export: `LLM_BASE_URL`, `LLM_MODEL_NAME`, `BACKEND_PORT`
   
-- [ ] `backend/core/schemas.py`
+- [x] `backend/core/schemas.py`
   - Pydantic models: `EssayRequest`, `ScoreDetail`, `EssayResponse`
   - Strict validation for all fields
   
-- [ ] `backend/core/prompt_builder.py`
+- [x] `backend/core/prompt_builder.py`
   - Function: `build_pte_prompt(question: str, essay: str) -> str`
   - Constructs full system prompt + user query
   
-- [ ] `backend/services/llm_service.py`
+- [x] `backend/services/llm_service.py`
   - Initialize OpenAI client pointing to `localhost:1234`
   - Function: `grade_essay(question: str, essay: str) -> dict`
   - Handle API errors gracefully
 
 #### 5. Frontend Files (`frontend/`)
 
-- [ ] `frontend/app.py`
+- [x] `frontend/app.py`
   - Streamlit UI with:
     - Text area for essay question
     - Large text area for essay input (300+ words)
@@ -342,7 +342,7 @@ clean:
       - Improvements (bullet list)
   - Makes POST request to `http://localhost:8000/api/grade-essay`
   
-- [ ] `frontend/assets/styles.css` (optional custom styling)
+- [x] `frontend/assets/styles.css` (optional custom styling)
 
 ---
 
@@ -377,7 +377,7 @@ Execute these phases sequentially. Complete each phase fully before moving to th
 
 ---
 
-### 🔧 PHASE 1: Development Environment Setup
+### 🔧 PHASE 1: Development Environment Setup - DONE
 
 **Objective:** Prepare the development environment and project scaffolding
 
@@ -464,7 +464,7 @@ uv pip list
 
 ---
 
-### 📊 PHASE 2: Create Test Data
+### 📊 PHASE 2: Create Test Data - DONE
 
 **Objective:** Generate realistic sample essays, questions, and expected outputs
 
@@ -553,7 +553,7 @@ python -m json.tool data/expected_outputs.json
 
 ---
 
-### ⚙️ PHASE 3: Configuration & Makefile
+### ⚙️ PHASE 3: Configuration & Makefile - DONE
 
 **Objective:** Set up environment configuration and automation scripts
 
@@ -622,7 +622,7 @@ make install
 
 ---
 
-### 🔌 PHASE 4: Backend Core Implementation
+### 🔌 PHASE 4: Backend Core Implementation - DONE
 
 **Objective:** Build backend core modules (config, schemas, prompt builder)
 
@@ -688,7 +688,7 @@ python -c "from core.prompt_builder import build_pte_prompt; print('OK')"
 
 ---
 
-### 🤖 PHASE 5: Backend LLM Service
+### 🤖 PHASE 5: Backend LLM Service - DONE
 
 **Objective:** Implement LLM client service for calling local LM Studio
 
@@ -742,7 +742,7 @@ python -c "from services.llm_service import grade_essay; print('LLM service read
 
 ---
 
-### 🌐 PHASE 6: Backend API Implementation
+### 🌐 PHASE 6: Backend API Implementation - DONE
 
 **Objective:** Build FastAPI application with endpoints
 
@@ -802,7 +802,7 @@ curl -X POST http://localhost:8000/api/grade-essay \
 
 ---
 
-### 🎨 PHASE 7: Frontend Implementation
+### 🎨 PHASE 7: Frontend Implementation - DONE
 
 **Objective:** Build Streamlit user interface
 
@@ -834,7 +834,7 @@ curl -X POST http://localhost:8000/api/grade-essay \
 
 ---
 
-### 📚 PHASE 8: Documentation
+### 📚 PHASE 8: Documentation - DONE
 
 **Objective:** Create comprehensive documentation
 
@@ -874,7 +874,7 @@ curl -X POST http://localhost:8000/api/grade-essay \
 
 ---
 
-### ✅ PHASE 9: End-to-End Testing
+### ✅ PHASE 9: End-to-End Testing - IN PROGRESS
 
 **Objective:** Verify complete system functionality
 
@@ -921,7 +921,7 @@ curl -X POST http://localhost:8000/api/grade-essay \
 
 ---
 
-### 🚀 PHASE 10: Refinement & Polish
+### 🚀 PHASE 10: Refinement & Polish - PARTIALLY IMPLEMENTED
 
 **Objective:** Final improvements and production readiness
 

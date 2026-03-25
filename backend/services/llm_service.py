@@ -49,6 +49,69 @@ def _extract_json_payload(raw_content: str) -> dict:
             raise LLMServiceError("LLM returned malformed JSON.") from exc
 
 
+def _normalize_scores(payload: dict) -> dict:
+    """Coerce model score values into the integer schema expected by the API."""
+
+    scores = payload.get("scores")
+    if not isinstance(scores, dict):
+        return payload
+
+    for item in scores.values():
+        if not isinstance(item, dict):
+            continue
+
+        value = item.get("score")
+        if isinstance(value, float):
+            item["score"] = int(round(value))
+
+        maximum = item.get("max")
+        if isinstance(maximum, float):
+            item["max"] = int(round(maximum))
+
+    return payload
+
+
+def _normalize_feedback(payload: dict) -> dict:
+    """Coerce feedback fields into strings when the model returns lists or other types."""
+
+    feedback = payload.get("feedback")
+    if not isinstance(feedback, dict):
+        return payload
+
+    for key in ("form", "grammar", "spelling"):
+        value = feedback.get(key)
+        if isinstance(value, list):
+            feedback[key] = " ".join(str(item).strip() for item in value if str(item).strip())
+        elif value is None:
+            feedback[key] = ""
+        elif not isinstance(value, str):
+            feedback[key] = str(value)
+
+    return payload
+
+
+def _normalize_string_list(values: object) -> list[str]:
+    """Coerce arbitrary list-like model output into a compact list of strings."""
+
+    if isinstance(values, list):
+        cleaned = [str(item).strip() for item in values if str(item).strip()]
+        return cleaned[:5]
+    if values is None:
+        return []
+
+    value = str(values).strip()
+    return [value] if value else []
+
+
+def _normalize_lists(payload: dict) -> dict:
+    """Normalize feedback and bullet-point collections to the API schema."""
+
+    payload = _normalize_feedback(payload)
+    payload["good_points"] = _normalize_string_list(payload.get("good_points"))
+    payload["improvements"] = _normalize_string_list(payload.get("improvements"))
+    return payload
+
+
 def _request_grading(question: str, essay: str) -> dict:
     prompt = build_pte_prompt(question, essay)
     client = _get_client()
@@ -62,7 +125,7 @@ def _request_grading(question: str, essay: str) -> dict:
                     {"role": "user", "content": prompt["user"]},
                 ],
                 temperature=0.3,
-                response_format={"type": "json_object"},
+                response_format={"type": "text"},
             )
         except Exception as exc:
             raise LLMServiceError(f"Failed to contact the local LLM server: {exc}") from exc
@@ -83,7 +146,7 @@ def _request_grading(question: str, essay: str) -> dict:
                     {"role": "user", "content": prompt["user"]},
                 ],
                 "temperature": 0.3,
-                "response_format": {"type": "json_object"},
+                "response_format": {"type": "text"},
             },
             headers={"Content-Type": "application/json", "Authorization": "Bearer lm-studio"},
             timeout=90.0,
@@ -112,6 +175,8 @@ async def grade_essay(question: str, essay: str) -> dict:
     for _ in range(2):
         try:
             payload = _request_grading(question, essay)
+            payload = _normalize_scores(payload)
+            payload = _normalize_lists(payload)
             validated = EssayResponse.model_validate(payload)
             return validated.model_dump()
         except LLMServiceError as exc:
