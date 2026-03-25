@@ -139,6 +139,7 @@ SPELLING_ALLOWLIST = {
     "pte",
     "real-time",
     "sustainability",
+    "lifestyle",
 }
 
 KNOWN_MISSPELLINGS = {
@@ -168,7 +169,35 @@ def _sentence_count(text: str) -> int:
 
 
 def _paragraphs(text: str) -> list[str]:
-    return [chunk.strip() for chunk in text.split("\n\n") if chunk.strip()]
+    explicit = [chunk.strip() for chunk in text.split("\n\n") if chunk.strip()]
+    if len(explicit) >= 2:
+        return explicit
+
+    normalized = re.sub(r"\s+", " ", text).strip()
+    if not normalized:
+        return []
+
+    marker_pattern = re.compile(
+        r"(?i)\b(first|second|third|finally|in conclusion|to conclude|to sum up|in summary)\b"
+    )
+    matches = list(marker_pattern.finditer(normalized))
+    if not matches:
+        return [normalized]
+
+    paragraphs: list[str] = []
+    start = 0
+    for index, match in enumerate(matches):
+        if match.start() > start:
+            chunk = normalized[start:match.start()].strip(" ,")
+            if chunk:
+                paragraphs.append(chunk)
+        next_start = matches[index + 1].start() if index + 1 < len(matches) else len(normalized)
+        chunk = normalized[match.start():next_start].strip(" ,")
+        if chunk:
+            paragraphs.append(chunk)
+        start = next_start
+
+    return paragraphs or [normalized]
 
 
 def _paragraph_count(text: str) -> int:
@@ -369,13 +398,16 @@ def _score_content_raw(
     overlap: int,
     coverage_ratio: float,
     paragraph_count: int,
+    transition_hits: int,
+    intro_conclusion: bool,
     generic_hits: int,
 ) -> tuple[int, str]:
     if overlap == 0 or coverage_ratio < 0.25:
         return 0, "The response does not address the prompt closely enough to earn content credit."
     if coverage_ratio < 0.45:
         return 1, "The response touches the prompt, but a major aspect is missing."
-    if coverage_ratio < 0.75 or paragraph_count < 3 or generic_hits >= 3:
+    strong_discourse = paragraph_count >= 3 or (transition_hits >= 3 and intro_conclusion)
+    if coverage_ratio < 0.75 or (not strong_discourse and generic_hits >= 1) or generic_hits >= 3:
         return 2, "The response addresses the task but misses part of the prompt or develops it unevenly."
     return 3, "The response addresses the prompt directly and covers the task adequately."
 
@@ -476,8 +508,10 @@ def score_essay_deterministic(question: str, essay: str) -> dict:
     lexical_diversity = _lexical_diversity(tokens)
     academic_word_ratio = _academic_word_ratio(tokens)
 
-    last_paragraph = paragraphs[-1].lower() if paragraphs else ""
-    intro_conclusion = bool(paragraphs) and any(marker in last_paragraph for marker in ("in conclusion", "to conclude", "overall"))
+    trailing_paragraphs = " ".join(paragraphs[-2:]).lower() if paragraphs else ""
+    intro_conclusion = bool(paragraphs) and any(
+        marker in trailing_paragraphs for marker in ("in conclusion", "to conclude", "to sum up", "in summary", "overall")
+    )
     body_paragraphs = max(0, paragraph_count - 2)
 
     form_raw, form_feedback = _score_form_raw(word_count)
@@ -492,7 +526,14 @@ def score_essay_deterministic(question: str, essay: str) -> dict:
         form_raw = 0
         form_feedback = " ".join(form_issues)
 
-    content_raw, content_feedback = _score_content_raw(overlap, coverage_ratio, paragraph_count, generic_hits)
+    content_raw, content_feedback = _score_content_raw(
+        overlap,
+        coverage_ratio,
+        paragraph_count,
+        transition_hits,
+        intro_conclusion,
+        generic_hits,
+    )
     spelling_raw, spelling_feedback = _score_spelling_raw(spelling_errors, spelling_examples)
     grammar_raw, grammar_feedback = _score_grammar_raw(
         grammar_errors,

@@ -42,6 +42,8 @@ def _merge_scores(deterministic: dict, llm: dict) -> dict:
                 final_score = min(final_score, det_score)
         elif key == "vocabulary":
             final_score = _clamp(llm_score, max(0, det_score - 1), min(max_score, det_score + 1))
+        elif key == "development_structure_coherence":
+            final_score = _clamp(llm_score, max(0, det_score - 1), min(max_score, det_score + 2))
         else:
             final_score = _clamp(llm_score, max(0, det_score - 1), min(max_score, det_score + 1))
 
