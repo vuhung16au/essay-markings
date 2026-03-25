@@ -66,10 +66,6 @@ def _merge_points(llm: dict) -> tuple[list[str], list[str]]:
     return good_points[:5], improvements[:5]
 
 
-def _format_ratio(value: float) -> str:
-    return f"{value:.2f}"
-
-
 def _join_examples(points: list[str], limit: int = 2) -> str:
     selected = [point.strip().rstrip(".") for point in points[:limit] if point.strip()]
     return "; ".join(selected)
@@ -83,123 +79,105 @@ def _build_details(
     improvements: list[str],
 ) -> dict:
     signals = deterministic["signals"]
-    det_scores = deterministic["scores"]
 
     content_analysis = (
-        "Content was judged against prompt relevance and task coverage. "
-        f"The essay matched {signals['prompt_keyword_overlap']} prompt keywords with a coverage ratio of "
-        f"{_format_ratio(signals['prompt_coverage_ratio'])}. "
-        f"Current score: {merged_scores['content']['score']} / {merged_scores['content']['max']}."
+        "This score reflects how clearly the essay answers the question and how fully the main ideas are developed. "
+        "The response stays on the topic, but it does not yet address the task with enough depth and completeness "
+        "to reach the highest band."
     )
     content_deductions: list[str] = []
     if merged_scores["content"]["score"] < merged_scores["content"]["max"]:
         content_deductions.append(
-            "The response does not fully cover every aspect of the prompt, so content credit was reduced."
+            "Some parts of the response need fuller explanation or more direct support for the main argument."
         )
         if signals["prompt_coverage_ratio"] < 0.75:
             content_deductions.append(
-                f"Prompt coverage remained below the strongest band at {_format_ratio(signals['prompt_coverage_ratio'])}."
+                "The essay would be stronger if it addressed the question more completely and directly throughout."
             )
         if improvements:
-            content_deductions.append(f"Improvement focus: {_join_examples(improvements, 1)}.")
+            content_deductions.append(f"Suggested next step: {_join_examples(improvements, 1)}.")
 
     development_analysis = (
-        "Development, structure, and coherence were judged from paragraphing, progression, and linking. "
-        f"The essay has {signals['paragraph_count']} paragraphs, {signals['transition_hits']} transition markers, "
-        f"and {signals['sentence_count']} sentences. "
-        f"Current score: {merged_scores['development_structure_coherence']['score']} / "
-        f"{merged_scores['development_structure_coherence']['max']}."
+        "This score reflects how well the essay is organized, how smoothly ideas connect, and how clearly the argument progresses. "
+        "The response shows an understandable direction, but the flow between points can still be improved."
     )
     development_deductions: list[str] = []
     if merged_scores["development_structure_coherence"]["score"] < merged_scores["development_structure_coherence"]["max"]:
         if signals["paragraph_count"] < 4:
-            development_deductions.append("The essay has limited paragraph development for a top-band response.")
+            development_deductions.append("The essay needs clearer paragraph development to make each main point stand out.")
         if signals["transition_hits"] < 2:
-            development_deductions.append("Linking language is limited, so idea progression feels less controlled.")
+            development_deductions.append("Ideas do not always connect smoothly, so the argument can feel abrupt in places.")
         development_deductions.append(
-            "Some arguments or examples need clearer sequencing and stronger logical connection."
+            "Some arguments or examples need clearer sequencing and stronger logical links."
         )
 
     form_analysis = (
-        "Form was judged using official PTE-style length and presentation checks. "
-        f"The essay contains {signals['word_count']} words, punctuation count {signals['punctuation_count']}, "
-        f"and bullet-line count {signals['bullet_line_count']}. "
-        f"Current score: {merged_scores['form']['score']} / {merged_scores['form']['max']}. "
+        "This score reflects whether the essay is presented in an appropriate academic essay format and stays within the expected length range. "
         f"{feedback['form']}"
     )
     form_deductions: list[str] = []
     if merged_scores["form"]["score"] < merged_scores["form"]["max"]:
         if not 200 <= signals["word_count"] <= 300:
             form_deductions.append(
-                "The essay falls outside the ideal 200-300 word band, which reduces form marks."
+                "The essay is outside the ideal length range for a strong PTE response."
             )
         if signals["bullet_line_count"] > 0:
-            form_deductions.append("Bullet-point formatting is penalized for essay form.")
+            form_deductions.append("The response should be written as a continuous essay rather than as bullet points.")
         if signals["all_caps_ratio"] > 0.85:
-            form_deductions.append("Mostly-capitalized writing is penalized in the form criterion.")
+            form_deductions.append("Using capital letters throughout weakens the formal presentation of the essay.")
 
     grammar_analysis = (
-        "Grammar was judged from sentence-level error patterns and control of structure. "
-        f"The deterministic pass found {signals['grammar_error_count']} grammar-related signal(s), "
-        f"including {signals['grammar_pattern_hits']} pattern hit(s), and {signals['complex_sentence_count']} complex sentence(s). "
-        f"Current score: {merged_scores['grammar']['score']} / {merged_scores['grammar']['max']}. "
+        "This score reflects the accuracy and control of sentence construction across the essay. "
         f"{feedback['grammar']}"
     )
     grammar_deductions: list[str] = []
     if merged_scores["grammar"]["score"] < merged_scores["grammar"]["max"]:
         if signals["grammar_error_count"] > 0:
             grammar_deductions.append(
-                f"Detected grammar issues reduced the score: {signals['grammar_error_count']} issue signal(s) were found."
+                "Grammar mistakes reduce clarity and make some sentences sound less controlled."
             )
         if signals["complex_sentence_count"] < max(2, signals["sentence_count"] // 4):
             grammar_deductions.append(
-                "Sentence patterns are not varied enough to support the strongest grammar band."
+                "Using a wider range of accurate sentence patterns would strengthen this category."
             )
 
     linguistic_analysis = (
-        "Linguistic range was judged from sentence variety and language flexibility. "
-        f"The essay shows lexical diversity {_format_ratio(signals['lexical_diversity'])}, "
-        f"academic word ratio {_format_ratio(signals['academic_word_ratio'])}, and "
-        f"{signals['complex_sentence_count']} complex sentence(s). "
-        f"Current score: {merged_scores['linguistic_range']['score']} / {merged_scores['linguistic_range']['max']}."
+        "This score reflects how flexibly the essay uses language, including sentence variety and the ability to express ideas clearly. "
+        "The language is effective overall, but there is still room for more variety and control."
     )
     linguistic_deductions: list[str] = []
     if merged_scores["linguistic_range"]["score"] < merged_scores["linguistic_range"]["max"]:
         if signals["lexical_diversity"] < 0.52:
-            linguistic_deductions.append("Language variety is not broad enough for the top linguistic-range band.")
+            linguistic_deductions.append("The essay would benefit from a broader range of sentence styles and expressions.")
         if signals["academic_word_ratio"] < 0.22:
-            linguistic_deductions.append("The essay uses limited higher-register academic wording.")
+            linguistic_deductions.append("More precise academic-style language would strengthen the overall range.")
         if signals["complex_sentence_count"] < max(2, signals["sentence_count"] // 3):
-            linguistic_deductions.append("More varied sentence structures would strengthen linguistic range.")
+            linguistic_deductions.append("More varied sentence structures would make the writing sound more mature and flexible.")
 
     spelling_analysis = (
-        "Spelling was judged at token level using the vendored dictionary and explicit misspelling checks. "
-        f"The deterministic pass found {signals['spelling_error_count']} likely spelling error(s). "
-        f"Current score: {merged_scores['spelling']['score']} / {merged_scores['spelling']['max']}. "
+        "This score reflects spelling accuracy across the essay. "
         f"{feedback['spelling']}"
     )
     spelling_deductions: list[str] = []
     if merged_scores["spelling"]["score"] < merged_scores["spelling"]["max"]:
         spelling_deductions.append(
-            f"Spelling marks were reduced because {signals['spelling_error_count']} likely spelling error(s) were detected."
+            "A spelling mistake was found, so the essay did not receive full marks for spelling."
         )
 
     vocabulary_analysis = (
-        "Vocabulary was judged from lexical variety, appropriateness, and precision. "
-        f"The essay shows lexical diversity {_format_ratio(signals['lexical_diversity'])} and academic word ratio "
-        f"{_format_ratio(signals['academic_word_ratio'])}. "
-        f"Current score: {merged_scores['vocabulary']['score']} / {merged_scores['vocabulary']['max']}."
+        "This score reflects the precision, appropriateness, and range of word choice used in the essay. "
+        "The vocabulary supports the message, but higher-band responses show more precise and varied wording."
     )
     vocabulary_deductions: list[str] = []
     if merged_scores["vocabulary"]["score"] < merged_scores["vocabulary"]["max"]:
-        vocabulary_deductions.append("Word choice is serviceable, but not consistently precise or wide-ranging enough for full credit.")
+        vocabulary_deductions.append("Word choice is clear, but not consistently precise or wide-ranging enough for full credit.")
         if signals["generic_phrase_hits"] > 0:
-            vocabulary_deductions.append("Some phrasing is generic, which weakens lexical precision.")
+            vocabulary_deductions.append("Some expressions are too general, which weakens the impact of the argument.")
 
     if good_points:
         content_analysis = f"{content_analysis} Strength noted: {_join_examples(good_points, 1)}."
     if improvements:
-        development_analysis = f"{development_analysis} Improvement direction: {_join_examples(improvements, 1)}."
+        development_analysis = f"{development_analysis} A useful next step would be: {_join_examples(improvements, 1)}."
 
     return {
         "content": {"analysis": content_analysis, "deductions": content_deductions},
