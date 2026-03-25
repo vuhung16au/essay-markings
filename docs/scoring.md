@@ -2,7 +2,7 @@
 
 ## Overview
 
-The project now uses the Pearson-style rubric in [Pearson-PTE-rubrics.md](/Users/vuhung/00.Work/00.Workspace/essay-markings/TODOs/Pearson-PTE-rubrics.md) as the main scoring reference for essays.
+The project now uses the Pearson-style rubric in [docs/pte_essay_rubric.md](./pte_essay_rubric.md) as the main scoring reference for essays.
 
 The grading flow is:
 
@@ -131,12 +131,12 @@ The deterministic scorer considers measurable signals that support the rubric:
 ### Spelling
 
 - token-level spelling checks
-- vendored SCOWL-based dictionary in [data/words.txt](/Users/vuhung/00.Work/00.Workspace/essay-markings/data/words.txt)
+- vendored SCOWL-based dictionary in [data/words.txt](../data/words.txt)
 - explicit misspelling detection for common errors
 - accepted US, UK, Canadian, and Australian spelling variants
 - consistency checks for mixed spelling conventions within one essay
 
-Source notes for the dictionary are in [words.SOURCE.md](/Users/vuhung/00.Work/00.Workspace/essay-markings/data/words.SOURCE.md).
+Source notes for the dictionary are in [words.SOURCE.md](../data/words.SOURCE.md).
 
 ## Pearson-style hard gates
 
@@ -163,7 +163,7 @@ This keeps scoring more stable than pure LLM marking while still allowing richer
 
 ## Current sample benchmark notes
 
-The sample fixture file [expected_outputs.json](/Users/vuhung/00.Work/00.Workspace/essay-markings/data/expected_outputs.json) now reflects the current rubric implementation rather than the older calibration set.
+The sample fixture file [expected_outputs.json](../data/expected_outputs.json) now reflects the current rubric implementation rather than the older calibration set.
 
 One important example:
 

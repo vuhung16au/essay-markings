@@ -166,7 +166,7 @@ This endpoint now uses:
 
 - prompt-aware content relevance
 - direct Pearson-style band scoring for content, development, and linguistic range
-- token-level spelling detection backed by the vendored SCOWL dictionary in `data/words.txt`
+- token-level spelling detection backed by the vendored SCOWL dictionary in [data/words.txt](../data/words.txt)
 - acceptance of US/UK/AU/CA spelling variants
 - mixed-convention detection within a single essay
 - sentence-level grammar and discourse signals

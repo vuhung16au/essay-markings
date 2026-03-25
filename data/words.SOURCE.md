@@ -21,7 +21,7 @@ Where:
 
 The generated list was then copied into this repository as:
 
-- [words.txt](/Users/vuhung/00.Work/00.Workspace/essay-markings/data/words.txt)
+- [words.txt](./words.txt)
 
 License note:
 

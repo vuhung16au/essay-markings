@@ -5,7 +5,7 @@
 - Python `3.13.9`
 - `uv`
 - LM Studio running locally
-- A loaded model matching `LLM_MODEL_NAME` in [.env.local](/Users/vuhung/00.Work/00.Workspace/essay-markings/.env.local)
+- A loaded model matching `LLM_MODEL_NAME` in [.env.local](./.env.local)
 
 ## 1. Create the environment
 

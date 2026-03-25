@@ -34,7 +34,7 @@ Instead, the main grading endpoint uses a hybrid strategy:
    - improvements
    - detailed category analysis with deduction reasons
 
-The scoring rubric now follows the direct Pearson-style essay bands documented in [Pearson-PTE-rubrics.md](/Users/vuhung/00.Work/00.Workspace/essay-markings/TODOs/Pearson-PTE-rubrics.md):
+The scoring rubric now follows the direct Pearson-style essay bands documented in [docs/pte_essay_rubric.md](./docs/pte_essay_rubric.md):
 
 - Content `0-6`
 - Development, Structure & Coherence `1-6` in normal scoring, with `0` possible through gating
@@ -60,7 +60,7 @@ The scoring rubric now follows the direct Pearson-style essay bands documented i
   - official form thresholds
   - content/form gating
   - direct Pearson-style band scoring for content, development, and linguistic range
-  - vendored SCOWL-based dictionary in [data/words.txt](/Users/vuhung/00.Work/00.Workspace/essay-markings/data/words.txt)
+  - vendored SCOWL-based dictionary in [data/words.txt](./data/words.txt)
   - support for accepted US/UK/AU/CA spellings with mixed-convention detection
 
 ## Tech stack
@@ -82,7 +82,6 @@ backend/    FastAPI app, schemas, prompt builder, deterministic scorer, hybrid g
 frontend/   Streamlit UI, styling, report export helpers
 data/       Sample questions, essays, expected outputs, vendored word list
 docs/       Architecture, API, and scoring documentation
-TODOs/      FRD and Pearson criteria notes
 ```
 
 ## Setup
@@ -112,11 +111,11 @@ The backend expects LM Studio to expose an OpenAI-compatible `/v1` API.
 
 ## Documentation
 
-- [QUICKSTART.md](/Users/vuhung/00.Work/00.Workspace/essay-markings/QUICKSTART.md)
-- [docs/architecture.md](/Users/vuhung/00.Work/00.Workspace/essay-markings/docs/architecture.md)
-- [docs/api_specs.md](/Users/vuhung/00.Work/00.Workspace/essay-markings/docs/api_specs.md)
-- [docs/scoring.md](/Users/vuhung/00.Work/00.Workspace/essay-markings/docs/scoring.md)
-- [data/words.SOURCE.md](/Users/vuhung/00.Work/00.Workspace/essay-markings/data/words.SOURCE.md)
+- [QUICKSTART.md](./QUICKSTART.md)
+- [docs/architecture.md](./docs/architecture.md)
+- [docs/api_specs.md](./docs/api_specs.md)
+- [docs/scoring.md](./docs/scoring.md)
+- [data/words.SOURCE.md](./data/words.SOURCE.md)
 
 ## Sample result snippet
 
@@ -145,4 +144,4 @@ Detail -> Grammar
 - The frontend export buttons for Word and PDF require the installed dependencies from `uv sync`.
 - The deterministic scorer is intentionally more stable than the LLM and acts as the scoring anchor.
 - The LLM is still used for richer judgment and narrative feedback, but final numeric scores are bounded in code.
-- Sample fixtures in [data/expected_outputs.json](/Users/vuhung/00.Work/00.Workspace/essay-markings/data/expected_outputs.json) now reflect the current direct-band rubric implementation rather than the older mapped-band calibration.
+- Sample fixtures in [data/expected_outputs.json](./data/expected_outputs.json) now reflect the current direct-band rubric implementation rather than the older mapped-band calibration.
