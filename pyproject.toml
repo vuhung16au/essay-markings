@@ -5,7 +5,7 @@ description = "PTE Academic Essay Grading System with a Streamlit frontend and F
 readme = "README.md"
 requires-python = ">=3.13,<3.14"
 dependencies = [
-    "streamlit==1.33.0",
+    "streamlit==1.54.0",
     "fastapi==0.110.1",
     "uvicorn==0.29.0",
     "openai==1.16.2",
